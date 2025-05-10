@@ -1,9 +1,18 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeftIcon, CloudArrowUpIcon, PhotoIcon } from "@heroicons/react/24/outline";
 import { useUser } from "@clerk/clerk-react";
 
-const CreateSlides: React.FC = () => {
+interface Slide {
+  _id: string;
+  title: string;
+  description: string;
+  image: string;
+  overlayImages?: string[];
+}
+
+const EditSlide: React.FC = () => {
+  const { slideId } = useParams<{ slideId: string }>();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [image, setImage] = useState<File | null>(null);
@@ -12,6 +21,8 @@ const CreateSlides: React.FC = () => {
   const [overlayPreviewUrls, setOverlayPreviewUrls] = useState<string[]>([]);
   const [activeOverlayIndex, setActiveOverlayIndex] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
   const navigate = useNavigate();
   const { user, isLoaded, isSignedIn } = useUser();
   
@@ -20,9 +31,59 @@ const CreateSlides: React.FC = () => {
   // Security check - redirect if not admin
   useEffect(() => {
     if (isLoaded && (!isSignedIn || !isAdmin)) {
-      navigate("/login", { state: { from: "/admin/create-slides" } });
+      navigate("/login", { state: { from: `/admin/edit-slide/${slideId}` } });
     }
-  }, [isLoaded, isSignedIn, isAdmin, navigate]);
+  }, [isLoaded, isSignedIn, isAdmin, navigate, slideId]);
+
+  // Fetch the slide data
+  useEffect(() => {
+    // Only fetch slide if user is admin
+    if (!isLoaded || !isAdmin || !slideId) return;
+    
+    const fetchSlide = async () => {
+      try {
+        setIsLoading(true);
+        const response = await fetch(`http://localhost:8000/api/heroslides/${slideId}`);
+        
+        if (!response.ok) {
+          throw new Error("Failed to fetch slide");
+        }
+        
+        const data: Slide = await response.json();
+        
+        // Set form fields
+        setTitle(data.title);
+        setDescription(data.description);
+        setImagePreviewUrl(fixImageUrl(data.image));
+        
+        // Set overlay image previews if they exist
+        if (data.overlayImages && data.overlayImages.length > 0) {
+          setOverlayPreviewUrls(data.overlayImages.map(img => fixImageUrl(img)));
+        }
+        
+      } catch (error) {
+        console.error("Error fetching slide:", error);
+        setError("Failed to load slide data. Please try again.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchSlide();
+  }, [isLoaded, isAdmin, slideId]);
+
+  // Function to add base URL to relative paths if needed
+  const fixImageUrl = (url: string): string => {
+    if (!url) return 'https://via.placeholder.com/400x300?text=No+Image';
+    
+    // If it's already an absolute URL (with http or https), return as is
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
+    }
+    
+    // If it's a relative URL (from your server), add the base URL
+    return `http://localhost:8000${url.startsWith('/') ? '' : '/'}${url}`;
+  };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -71,7 +132,7 @@ const CreateSlides: React.FC = () => {
     return () => clearInterval(intervalId);
   }, [overlayPreviewUrls]);
 
-  const handleAddSlide = async (e: React.FormEvent) => {
+  const handleUpdateSlide = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     
@@ -82,38 +143,62 @@ const CreateSlides: React.FC = () => {
     overlayImages.forEach((file) => formData.append("overlayImages", file));
 
     try {
-      const response = await fetch("http://localhost:8000/api/heroslides", {
-        method: "POST",
+      const response = await fetch(`http://localhost:8000/api/heroslides/${slideId}`, {
+        method: "PUT",
         body: formData,
       });
 
-      if (!response.ok) throw new Error("Failed to add slide");
+      if (!response.ok) throw new Error("Failed to update slide");
 
-      navigate("/admin/slides", { state: { success: "Slide created successfully" } });
+      navigate("/admin/slides", { state: { success: "Slide updated successfully" } });
     } catch (error) {
-      console.error("Error adding slide:", error);
+      console.error("Error updating slide:", error);
       setIsSubmitting(false);
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen pt-24 bg-gray-50 flex justify-center items-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen pt-24 bg-gray-50 flex justify-center items-center">
+        <div className="bg-red-50 p-6 rounded-lg border border-red-200 text-center">
+          <p className="text-red-600 mb-4">{error}</p>
+          <button
+            onClick={() => navigate("/admin/slides")}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          >
+            Go Back
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen pt-24 bg-gray-50">
       <div className="max-w-6xl mx-auto px-4 py-8">
         <div className="flex items-center mb-8">
           <button
-            onClick={() => navigate("/admin")}
+            onClick={() => navigate("/admin/slides")}
             className="flex items-center text-gray-600 hover:text-gray-900 mr-6"
           >
             <ArrowLeftIcon className="h-5 w-5 mr-2" />
             Back
           </button>
-          <h1 className="text-2xl font-bold text-gray-900">Add New Hero Slide</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Edit Hero Slide</h1>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Form Section */}
           <div className="bg-white shadow rounded-lg overflow-hidden">
-            <form onSubmit={handleAddSlide} className="divide-y divide-gray-200">
+            <form onSubmit={handleUpdateSlide} className="divide-y divide-gray-200">
               <div className="p-6 space-y-6">
                 <div>
                   <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
@@ -135,94 +220,96 @@ const CreateSlides: React.FC = () => {
                   </label>
                   <textarea
                     id="description"
-                    rows={3}
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
+                    rows={4}
                     className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                     required
-                  />
+                  ></textarea>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Main Image</label>
-                  <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                  <label htmlFor="image" className="block text-sm font-medium text-gray-700 mb-1">
+                    Main Image
+                  </label>
+                  <div className="mt-2 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
                     <div className="space-y-1 text-center">
-                      {image ? (
-                        <div className="text-sm text-gray-600">
-                          <img 
-                            src={imagePreviewUrl} 
-                            alt="Main image preview" 
-                            className="h-32 mx-auto object-cover rounded-md"
+                      <PhotoIcon className="mx-auto h-12 w-12 text-gray-400" />
+                      <div className="flex text-sm text-gray-600">
+                        <label
+                          htmlFor="image"
+                          className="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500"
+                        >
+                          <span>Upload a file</span>
+                          <input
+                            id="image"
+                            name="image"
+                            type="file"
+                            className="sr-only"
+                            accept="image/*"
+                            onChange={handleImageChange}
                           />
-                          <p className="mt-2">{image.name}</p>
+                        </label>
+                        <p className="pl-1">or drag and drop</p>
+                      </div>
+                      <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                      {imagePreviewUrl && (
+                        <div className="mt-3">
+                          <p className="text-sm text-gray-500">Current Image:</p>
+                          <img
+                            src={imagePreviewUrl}
+                            alt="Current main image"
+                            className="mt-2 max-h-40 mx-auto rounded"
+                          />
                         </div>
-                      ) : (
-                        <>
-                          <PhotoIcon className="mx-auto h-12 w-12 text-gray-400" />
-                          <div className="flex text-sm text-gray-600">
-                            <label
-                              htmlFor="main-image"
-                              className="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none"
-                            >
-                              <span>Upload a file</span>
-                              <input
-                                id="main-image"
-                                name="main-image"
-                                type="file"
-                                className="sr-only"
-                                onChange={handleImageChange}
-                                required
-                              />
-                            </label>
-                            <p className="pl-1">or drag and drop</p>
-                          </div>
-                          <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
-                        </>
                       )}
                     </div>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Overlay Images (Optional)</label>
-                  <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                  <label htmlFor="overlayImages" className="block text-sm font-medium text-gray-700 mb-1">
+                    Overlay Images (Optional)
+                  </label>
+                  <div className="mt-2 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
                     <div className="space-y-1 text-center">
-                      {overlayImages.length > 0 ? (
-                        <div className="text-sm text-gray-600">
-                          <div className="flex flex-wrap gap-2 justify-center">
+                      <PhotoIcon className="mx-auto h-12 w-12 text-gray-400" />
+                      <div className="flex text-sm text-gray-600">
+                        <label
+                          htmlFor="overlayImages"
+                          className="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500"
+                        >
+                          <span>Upload files</span>
+                          <input
+                            id="overlayImages"
+                            name="overlayImages"
+                            type="file"
+                            className="sr-only"
+                            accept="image/*"
+                            multiple
+                            onChange={handleOverlayImagesChange}
+                          />
+                        </label>
+                        <p className="pl-1">or drag and drop</p>
+                      </div>
+                      <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                      {overlayPreviewUrls.length > 0 && (
+                        <div className="mt-3">
+                          <p className="text-sm text-gray-500">Current Overlay Images: {overlayPreviewUrls.length}</p>
+                          <div className="mt-2 flex flex-wrap gap-2 justify-center">
                             {overlayPreviewUrls.map((url, index) => (
-                              <img 
+                              <img
                                 key={index}
-                                src={url} 
-                                alt={`Overlay preview ${index + 1}`} 
-                                className="h-16 w-16 object-cover rounded-md"
+                                src={url}
+                                alt={`Overlay image ${index + 1}`}
+                                className="h-20 w-20 object-cover rounded"
                               />
                             ))}
                           </div>
-                          <p className="mt-2">{overlayImages.length} images selected</p>
+                          <p className="text-xs text-gray-500 mt-2">
+                            Note: Uploading new overlay images will replace all existing ones
+                          </p>
                         </div>
-                      ) : (
-                        <>
-                          <PhotoIcon className="mx-auto h-12 w-12 text-gray-400" />
-                          <div className="flex text-sm text-gray-600">
-                            <label
-                              htmlFor="overlay-images"
-                              className="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none"
-                            >
-                              <span>Upload files</span>
-                              <input
-                                id="overlay-images"
-                                name="overlay-images"
-                                type="file"
-                                multiple
-                                className="sr-only"
-                                onChange={handleOverlayImagesChange}
-                              />
-                            </label>
-                            <p className="pl-1">or drag and drop</p>
-                          </div>
-                          <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB each</p>
-                        </>
                       )}
                     </div>
                   </div>
@@ -232,7 +319,7 @@ const CreateSlides: React.FC = () => {
               <div className="px-6 py-3 bg-gray-50 text-right">
                 <button
                   type="button"
-                  onClick={() => navigate("/admin")}
+                  onClick={() => navigate("/admin/slides")}
                   className="mr-3 inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 >
                   Cancel
@@ -245,12 +332,12 @@ const CreateSlides: React.FC = () => {
                   {isSubmitting ? (
                     <>
                       <CloudArrowUpIcon className="h-5 w-5 mr-2 animate-pulse" />
-                      Creating...
+                      Updating...
                     </>
                   ) : (
                     <>
                       <CloudArrowUpIcon className="h-5 w-5 mr-2" />
-                      Create Slide
+                      Update Slide
                     </>
                   )}
                 </button>
@@ -316,15 +403,10 @@ const CreateSlides: React.FC = () => {
                     )}
                   </>
                 ) : (
-                  <div className="h-full flex flex-col items-center justify-center text-gray-400">
-                    <PhotoIcon className="h-16 w-16 mb-4" />
-                    <p>Upload a main image to see the preview</p>
+                  <div className="h-full flex items-center justify-center">
+                    <p className="text-gray-400">No image selected</p>
                   </div>
                 )}
-              </div>
-              
-              <div className="mt-4 text-gray-600 text-sm">
-                <p>This preview shows how your slide will appear on the homepage. The overlay images will automatically cycle every 3 seconds.</p>
               </div>
             </div>
           </div>
@@ -334,4 +416,4 @@ const CreateSlides: React.FC = () => {
   );
 };
 
-export default CreateSlides;
+export default EditSlide; 

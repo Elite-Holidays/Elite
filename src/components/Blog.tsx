@@ -1,12 +1,9 @@
 import React from "react";
-import Header from "./Header";
 
-const Blog: React.FC = () => {
+const Blog = () => {
     return (
         <div className="min-h-screen bg-gray-50">
-            <Header /> {/* ✅ Header for navigation */}
-
-            <div className="max-w-7xl mx-auto px-6 pt-28 pb-20">
+            <div className="pt-32 pb-16 px-4 lg:px-8">
                 {/* Page Title */}
                 <div className="text-center">
                     <h1 className="text-4xl font-extrabold text-gray-900 mb-4">Travel Blog</h1>

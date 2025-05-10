@@ -41,15 +41,6 @@ const ContactUs = () => {
 
     return (
         <div className="min-h-screen bg-gradient-to-r from-blue-50 to-white text-gray-900">
-            <header className="fixed top-0 left-0 right-0 bg-white/90 shadow-md backdrop-blur-lg z-50">
-                <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-                    <h1 className="text-3xl font-extrabold text-blue-600 cursor-pointer"
-                        onClick={() => window.location.reload()}>
-                        Elite Holidays
-                    </h1>
-                </div>
-            </header>
-
             <div className="pt-32 pb-20 px-6 md:px-12 lg:px-24">
                 <div className="max-w-7xl mx-auto">
                     <h1 className="text-5xl font-extrabold text-center mb-12 text-blue-800">Contact Us</h1>

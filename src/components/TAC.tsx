@@ -1,12 +1,9 @@
 import React from "react";
-import Header from "./Header";
 
-const TermsAndConditions: React.FC = () => {
+const TAC = () => {
     return (
-        <div className="min-h-screen bg-gray-50">
-            <Header /> {/* ✅ Keep the header for navigation */}
-
-            <div className="max-w-5xl mx-auto px-6 pt-28 pb-20">
+        <div className="min-h-screen bg-white">
+            <div className="pt-32 pb-16 px-4 lg:px-8">
                 {/* Page Title */}
                 <div className="text-center">
                     <h1 className="text-4xl font-extrabold text-gray-900 mb-4">Terms & Conditions</h1>
@@ -64,4 +61,4 @@ const TermsAndConditions: React.FC = () => {
     );
 };
 
-export default TermsAndConditions;
+export default TAC;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { IoChatbubblesSharp } from "react-icons/io5";
 import { ChatMessage } from "../types";
 
@@ -8,14 +8,27 @@ const Chatbot: React.FC = () => {
     { text: "Hi! I'm your AI travel assistant. How can I help you plan your perfect trip?", isUser: false },
   ]);
   const [userInput, setUserInput] = useState("");
-
+  const chatbotRef = useRef<HTMLDivElement>(null);
+  
+  // Handle clicks outside of the chatbot
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsChatOpen(true);
-    }, 10000); // Auto open after 10 seconds
+    const handleClickOutside = (event: MouseEvent) => {
+      if (chatbotRef.current && !chatbotRef.current.contains(event.target as Node) && isChatOpen) {
+        setIsChatOpen(false);
+      }
+    };
+    
+    // Add event listener when chat is open
+    if (isChatOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    
+    // Cleanup event listener
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isChatOpen]);
 
-    return () => clearTimeout(timer);
-  }, []);
 
   const handleSendMessage = () => {
     if (userInput.trim()) {
@@ -43,6 +56,7 @@ const Chatbot: React.FC = () => {
   return (
     <>
       <div
+        ref={chatbotRef}
         className={`fixed bottom-14 right-2 w-96 bg-white rounded-xl shadow-2xl transition-all duration-300 transform ${
           isChatOpen ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0 pointer-events-none"
         } z-50`}

@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import {
-  FaPlane,
-  FaHotel,
   FaMapMarkerAlt,
   FaCalendarAlt,
   FaClock,
@@ -14,7 +12,7 @@ import {
   FaCamera,
   FaBus,
   FaShip,
-  FaUser
+  FaUsers
 } from "react-icons/fa";
 
 interface PackageDetailsProps {
@@ -28,45 +26,45 @@ interface PackageDetailsProps {
   description: string;
   tripType: string;
   travelType: string;
+  itineraryMode: "manual" | "pdf";
+  itineraryPdf?: string;
   itinerary: { day: number; details: string; activities?: string[] }[];
-  flights: {
-    from: string;
-    to: string;
-    departureTime: string;
-    arrivalTime: string;
-    duration: string;
-  }[];
-  accommodations: {
-    hotel: string;
-    city: string;
-    country: string;
-    checkIn: string;
-    checkOut: string;
-    amenities?: string[];
-    image?: string;
-  }[];
-  reporting?: {
-    guestType: string;
-    reportingPoint: string;
-    droppingPoint: string;
-  };
   createdAt: string;
   updatedAt: string;
 }
 
 const PackageDetails: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+  const params = useParams<{ id?: string; slug?: string }>();
   const [packageTravel, setPackageTravel] = useState<PackageDetailsProps | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("itinerary");
+  const [activeTab] = useState("itinerary");
 
   useEffect(() => {
     const fetchPackage = async () => {
       try {
-        const response = await fetch(`http://localhost:8000/api/travelPackages/${id}`);
+        let response;
+        
+        // Check if we are using slug or id route
+        if (params.slug) {
+          response = await fetch(`http://localhost:8000/api/travelPackages/slug/${params.slug}`);
+        } else if (params.id) {
+          response = await fetch(`http://localhost:8000/api/travelPackages/${params.id}`);
+        } else {
+          throw new Error("No identifier provided");
+        }
+        
         if (!response.ok) throw new Error("Failed to fetch package");
         const data = await response.json();
         setPackageTravel(data);
+
+        // Update browser URL to use slug if we have one and aren't already using it
+        if (data.slug && params.id && !window.location.pathname.includes('/package/')) {
+          window.history.replaceState(
+            null, 
+            '', 
+            `/package/${data.slug}`
+          );
+        }
       } catch (error) {
         console.error("Error fetching package:", error);
       } finally {
@@ -74,7 +72,7 @@ const PackageDetails: React.FC = () => {
       }
     };
     fetchPackage();
-  }, [id]);
+  }, [params]);
 
   const getActivityIcon = (activity: string) => {
     const lowerActivity = activity.toLowerCase();
@@ -84,6 +82,28 @@ const PackageDetails: React.FC = () => {
     if (lowerActivity.includes("transfer") || lowerActivity.includes("bus")) return <FaBus className="inline mr-2" />;
     if (lowerActivity.includes("cruise") || lowerActivity.includes("boat")) return <FaShip className="inline mr-2" />;
     return <FaChevronRight className="inline mr-2" />;
+  };
+
+  // Function to download PDF with proper filename
+  const downloadPdf = async (pdfUrl: string, fileName: string) => {
+    try {
+      const response = await fetch(pdfUrl);
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(
+        new Blob([blob], { type: 'application/pdf' })
+      );
+      
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.setAttribute('download', fileName);
+      document.body.appendChild(link);
+      link.click();
+      window.URL.revokeObjectURL(blobUrl);
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error("Error downloading PDF:", error);
+      window.open(pdfUrl, '_blank');
+    }
   };
 
   if (loading) {
@@ -142,7 +162,7 @@ const PackageDetails: React.FC = () => {
             </div>
             <div className="flex items-center">
               <FaCalendarAlt className="mr-2" />
-              <span>{packageTravel.duration} days</span>
+              <span>{packageTravel.duration} </span>
             </div>
           </div>
         </div>
@@ -155,32 +175,104 @@ const PackageDetails: React.FC = () => {
           {/* Navigation Tabs */}
           <div className="sticky top-24 z-10 mb-8 bg-white/90 backdrop-blur-sm shadow-sm rounded-xl">
             <div className="flex overflow-x-auto scrollbar-hide">
-              {["itinerary", "flights", "accommodations", "reporting"].map((tab) => (
-                <button
-                  key={tab}
-                  className={`px-6 py-3 font-medium whitespace-nowrap transition-colors ${
-                    activeTab === tab 
-                      ? "text-blue-600 border-b-2 border-blue-600" 
-                      : "text-gray-500 hover:text-gray-700"
-                  }`}
-                  onClick={() => setActiveTab(tab)}
-                >
-                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                </button>
-              ))}
+              <button
+                className="px-6 py-3 font-medium whitespace-nowrap transition-colors text-blue-600 border-b-2 border-blue-600"
+              >
+                Itinerary
+              </button>
             </div>
           </div>
 
           {/* Content Sections */}
           <div>
             {/* Itinerary Section */}
-            {activeTab === "itinerary" && (
-              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-                <div className="p-8">
-                  <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">
-                    <FaCalendarAlt className="mr-3 text-blue-500" />
-                    Tour Itinerary
-                  </h2>
+            <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+              <div className="p-8">
+                <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                  <FaCalendarAlt className="mr-3 text-blue-500" />
+                  Tour Itinerary
+                </h2>
+                
+                {packageTravel.itineraryMode === "pdf" && packageTravel.itineraryPdf ? (
+                  <div className="mb-4">
+                    <div className="mb-4 flex items-center">
+                      <svg className="w-8 h-8 mr-2 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                      </svg>
+                      <span className="text-lg font-medium">Itinerary PDF Document</span>
+                    </div>
+                    
+                    <div className="h-[600px] border border-gray-300 rounded-lg overflow-hidden">
+                      <iframe 
+                        src={`https://docs.google.com/viewer?url=${encodeURIComponent(packageTravel.itineraryPdf || '')}&embedded=true`}
+                        className="w-full h-full"
+                        title="Itinerary PDF"
+                        frameBorder="0"
+                        onError={(e) => {
+                          // If Google Docs viewer fails, try PDF.js viewer as fallback
+                          const target = e.target as HTMLIFrameElement;
+                          target.src = `https://mozilla.github.io/pdf.js/web/viewer.html?file=${encodeURIComponent(packageTravel.itineraryPdf || '')}`;
+                          
+                          // Add second error handler
+                          target.addEventListener('error', () => {
+                            const parent = target.parentElement;
+                            if (parent) {
+                              parent.innerHTML = `
+                                <div class="flex flex-col items-center justify-center h-full bg-gray-50 p-8 text-center">
+                                  <svg class="w-16 h-16 text-red-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                  </svg>
+                                  <h3 class="text-xl font-semibold mb-2">PDF Preview Not Available</h3>
+                                  <p class="text-gray-600 mb-4">We're having trouble displaying this PDF.</p>
+                                  <a href="${packageTravel.itineraryPdf || '#'}" 
+                                    target="_blank" 
+                                    rel="noopener noreferrer" 
+                                    class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+                                    View PDF in New Tab
+                                  </a>
+                                </div>
+                              `;
+                            }
+                          });
+                        }}
+                      />
+                    </div>
+                    
+                    <div className="mt-4">
+                      <div className="flex flex-wrap gap-2">
+                        <a 
+                          href={packageTravel.itineraryPdf || '#'} 
+                          download
+                          className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            if (packageTravel.itineraryPdf) {
+                              const fileName = `${packageTravel.title.replace(/[^a-zA-Z0-9]/g, '_')}_Itinerary.pdf`;
+                              const pdfUrl = packageTravel.itineraryPdf; // Create a typed local variable
+                              downloadPdf(pdfUrl, fileName);
+                            }
+                          }}
+                        >
+                          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                          </svg>
+                          Save Itinerary PDF
+                        </a>
+                        <a 
+                          href={packageTravel.itineraryPdf || '#'} 
+                          target="_blank"
+                          rel="noopener noreferrer" 
+                          className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+                        >
+                          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                          </svg>
+                          View in New Tab
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
                   <div className="relative">
                     <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-200" />
                     {packageTravel.itinerary.map((item) => (
@@ -210,162 +302,9 @@ const PackageDetails: React.FC = () => {
                       </div>
                     ))}
                   </div>
-                </div>
+                )}
               </div>
-            )}
-
-            {/* Flights Section */}
-            {activeTab === "flights" && packageTravel.flights.length > 0 && (
-              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-                <div className="p-8">
-                  <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">
-                    <FaPlane className="mr-3 text-blue-500" />
-                    Flight Details
-                  </h2>
-                  <div className="space-y-4">
-                    {packageTravel.flights.map((flight, index) => (
-                      <div key={index} className="bg-gray-50 p-6 rounded-lg border border-gray-200">
-                        <div className="flex items-center mb-3">
-                          <div className="bg-blue-100 p-2 rounded-full mr-3">
-                            <FaPlane className="text-blue-600" />
-                          </div>
-                          <h3 className="text-lg font-semibold">Flight {index + 1}</h3>
-                        </div>
-                        <div className="grid md:grid-cols-3 gap-4 mb-3">
-                          <div>
-                            <p className="text-xs text-gray-500">From</p>
-                            <p className="font-medium">{flight.from}</p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-gray-500">To</p>
-                            <p className="font-medium">{flight.to}</p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-gray-500">Duration</p>
-                            <p className="font-medium">{flight.duration}</p>
-                          </div>
-                        </div>
-                        <div className="grid md:grid-cols-2 gap-4">
-                          <div>
-                            <p className="text-xs text-gray-500">Departure</p>
-                            <p className="font-medium flex items-center">
-                              <FaClock className="mr-2 text-blue-500" />
-                              {flight.departureTime}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-gray-500">Arrival</p>
-                            <p className="font-medium flex items-center">
-                              <FaClock className="mr-2 text-blue-500" />
-                              {flight.arrivalTime}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Accommodations Section */}
-            {activeTab === "accommodations" && packageTravel.accommodations.length > 0 && (
-              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-                <div className="p-8">
-                  <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">
-                    <FaHotel className="mr-3 text-blue-500" />
-                    Accommodations
-                  </h2>
-                  <div className="grid md:grid-cols-2 gap-4">
-                    {packageTravel.accommodations.map((stay, index) => (
-                      <div key={index} className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-                        <div className="h-48 bg-gray-200 relative overflow-hidden">
-                          <img
-                            src={stay.image || 'https://images.unsplash.com/photo-1566073771259-6a8506099945'}
-                            alt={stay.hotel}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1566073771259-6a8506099945';
-                            }}
-                          />
-                        </div>
-                        <div className="p-4">
-                          <h3 className="text-lg font-semibold mb-1">{stay.hotel}</h3>
-                          <p className="text-gray-600 text-sm mb-2 flex items-center">
-                            <FaMapMarkerAlt className="mr-1 text-blue-500" />
-                            {stay.city}, {stay.country}
-                          </p>
-                          <div className="grid grid-cols-2 gap-2 mb-2 text-sm">
-                            <div>
-                              <p className="text-xs text-gray-500">Check-in</p>
-                              <p className="font-medium flex items-center">
-                                <FaCalendarAlt className="mr-1 text-blue-500" />
-                                {stay.checkIn}
-                              </p>
-                            </div>
-                            <div>
-                              <p className="text-xs text-gray-500">Check-out</p>
-                              <p className="font-medium flex items-center">
-                                <FaCalendarAlt className="mr-1 text-blue-500" />
-                                {stay.checkOut}
-                              </p>
-                            </div>
-                          </div>
-                          {stay.amenities && (
-                            <div>
-                              <p className="text-xs text-gray-500 mb-1">Amenities:</p>
-                              <div className="flex flex-wrap gap-1">
-                                {stay.amenities.slice(0, 3).map((amenity, i) => (
-                                  <span key={i} className="bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full text-xs">
-                                    {amenity}
-                                  </span>
-                                ))}
-                                {stay.amenities.length > 3 && (
-                                  <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-xs">
-                                    +{stay.amenities.length - 3} more
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Reporting Section */}
-            {activeTab === "reporting" && packageTravel.reporting && (
-              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-                <div className="p-8">
-                  <h2 className="text-2xl font-bold text-gray-800 mb-6">Reporting Details</h2>
-                  <div className="bg-blue-50 rounded-lg p-6">
-                    <div className="grid md:grid-cols-3 gap-4">
-                      <div className="bg-white p-4 rounded">
-                        <h3 className="text-sm font-semibold text-gray-700 mb-1">Guest Type</h3>
-                        <p className="text-gray-600">{packageTravel.reporting.guestType}</p>
-                      </div>
-                      <div className="bg-white p-4 rounded">
-                        <h3 className="text-sm font-semibold text-gray-700 mb-1">Reporting Point</h3>
-                        <p className="text-gray-600 flex items-center">
-                          <FaMapMarkerAlt className="mr-1 text-blue-500" />
-                          {packageTravel.reporting.reportingPoint}
-                        </p>
-                      </div>
-                      <div className="bg-white p-4 rounded">
-                        <h3 className="text-sm font-semibold text-gray-700 mb-1">Dropping Point</h3>
-                        <p className="text-gray-600 flex items-center">
-                          <FaMapMarkerAlt className="mr-1 text-blue-500" />
-                          {packageTravel.reporting.droppingPoint}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
+            </div>
           </div>
         </div>
 
@@ -388,7 +327,7 @@ const PackageDetails: React.FC = () => {
                   <div className="text-right">
                     <p className="text-xs text-gray-500">Duration</p>
                     <p className="text-base font-medium">
-                      {packageTravel.duration} days
+                      {packageTravel.duration} 
                     </p>
                   </div>
                 </div>
@@ -396,16 +335,7 @@ const PackageDetails: React.FC = () => {
                 <div className="space-y-3 mb-4">
                   <div className="flex items-center">
                     <div className="bg-blue-100 p-1.5 rounded-full mr-2">
-                      <FaCalendarAlt className="text-blue-600 text-sm" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500">Next Available</p>
-                      <p className="text-sm font-medium">June 15, 2023</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center">
-                    <div className="bg-blue-100 p-1.5 rounded-full mr-2">
-                      <FaUser className="text-blue-600 text-sm" />
+                      <FaUsers className="text-blue-600 text-sm" />
                     </div>
                     <div>
                       <p className="text-xs text-gray-500">Group Size</p>
@@ -427,31 +357,7 @@ const PackageDetails: React.FC = () => {
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl shadow-md p-5 border border-gray-200">
-              <h3 className="text-lg font-bold mb-3">Trip Highlights</h3>
-              <ul className="space-y-2">
-                <li className="flex items-start text-sm">
-                  <span className="text-green-500 mr-2 mt-0.5">✓</span>
-                  <span>Private guided tours</span>
-                </li>
-                <li className="flex items-start text-sm">
-                  <span className="text-green-500 mr-2 mt-0.5">✓</span>
-                  <span>All entrance fees included</span>
-                </li>
-                <li className="flex items-start text-sm">
-                  <span className="text-green-500 mr-2 mt-0.5">✓</span>
-                  <span>Daily breakfast included</span>
-                </li>
-                <li className="flex items-start text-sm">
-                  <span className="text-green-500 mr-2 mt-0.5">✓</span>
-                  <span>24/7 customer support</span>
-                </li>
-                <li className="flex items-start text-sm">
-                  <span className="text-green-500 mr-2 mt-0.5">✓</span>
-                  <span>Travel insurance options</span>
-                </li>
-              </ul>
-            </div>
+
           </div>
         </div>
       </div>

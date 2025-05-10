@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useUser } from "@clerk/clerk-react";
 
 interface ItineraryDetails {
   day: string;
@@ -7,30 +8,18 @@ interface ItineraryDetails {
   details: string;
 }
 
-interface FlightDetails {
-  from: string;
-  to: string;
-  departureTime: string;
-  arrivalTime: string;
-  duration: string;
-}
-
-interface AccommodationDetails {
-  city: string;
-  country: string;
-  hotel: string;
-  checkIn: string;
-  checkOut: string;
-}
-
-interface ReportingDetails {
-  guestType: string;
-  reportingPoint: string;
-  droppingPoint: string;
-}
-
 const CreatePackage: React.FC = () => {
   const navigate = useNavigate();
+  const { user, isLoaded, isSignedIn } = useUser();
+  
+  const isAdmin = user?.publicMetadata?.role === "admin";
+
+  // Security check - redirect if not admin
+  useEffect(() => {
+    if (isLoaded && (!isSignedIn || !isAdmin)) {
+      navigate("/login", { state: { from: "/admin/create-package" } });
+    }
+  }, [isLoaded, isSignedIn, isAdmin, navigate]);
 
   const [travelTitle, setTravelTitle] = useState("");
   const [location, setLocation] = useState("");
@@ -41,21 +30,13 @@ const CreatePackage: React.FC = () => {
   const [travelDescription, setTravelDescription] = useState("");
   const [tripType, setTripType] = useState("");
   const [travelType, setTravelType] = useState("");
+  const [isPopular, setIsPopular] = useState(false);
+  const [itineraryMode, setItineraryMode] = useState<"manual" | "pdf">("pdf");
+  const [itineraryPdf, setItineraryPdf] = useState<File | null>(null);
 
   const [itinerary, setItinerary] = useState<ItineraryDetails[]>([
     { day: "", date: "", details: "" },
   ]);
-  const [flights, setFlights] = useState<FlightDetails[]>([
-    { from: "", to: "", departureTime: "", arrivalTime: "", duration: "" },
-  ]);
-  const [accommodations, setAccommodations] = useState<AccommodationDetails[]>([
-    { city: "", country: "", hotel: "", checkIn: "", checkOut: "" },
-  ]);
-  const [reporting, setReporting] = useState<ReportingDetails>({
-    guestType: "",
-    reportingPoint: "",
-    droppingPoint: "",
-  });
 
   const handleAddField = <T,>(setter: React.Dispatch<React.SetStateAction<T[]>>, state: T[], initialState: T) => {
     setter([...state, initialState]);
@@ -73,13 +54,6 @@ const CreatePackage: React.FC = () => {
       newState[index] = { ...newState[index], [field]: value };
       return newState;
     });
-  };
-
-  const handleReportingChange = (
-    field: keyof ReportingDetails,
-    value: string
-  ) => {
-    setReporting((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleRemoveField = <T,>(
@@ -101,10 +75,15 @@ const CreatePackage: React.FC = () => {
     formData.append("description", travelDescription);
     formData.append("tripType", tripType);
     formData.append("travelType", travelType);
-    formData.append("itinerary", JSON.stringify(itinerary));
-    formData.append("flights", JSON.stringify(flights));
-    formData.append("accommodations", JSON.stringify(accommodations));
-    formData.append("reporting", JSON.stringify(reporting));
+    formData.append("isPopular", isPopular.toString());
+    formData.append("itineraryMode", itineraryMode);
+    
+    if (itineraryMode === "manual") {
+      formData.append("itinerary", JSON.stringify(itinerary));
+    } else if (itineraryMode === "pdf" && itineraryPdf) {
+      formData.append("itineraryPdf", itineraryPdf);
+    }
+    
     if (travelImage) formData.append("image", travelImage);
 
     try {
@@ -125,7 +104,7 @@ const CreatePackage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 pt-24">
+    <div className="min-h-screen bg-gray-50 p-4 pt-28">
       <div className="max-w-6xl mx-auto">
         <div className="bg-white rounded-xl shadow-md overflow-hidden">
           <div className="p-6 bg-gradient-to-r from-blue-600 to-indigo-700 text-white">
@@ -162,7 +141,7 @@ const CreatePackage: React.FC = () => {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Price ($)</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Price (Rs)</label>
                     <input
                       type="text"
                       placeholder="e.g., 1299"
@@ -218,12 +197,25 @@ const CreatePackage: React.FC = () => {
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                     required
                   >
-                    <option value="" disabled>Select Trip Type</option>
+                    <option value="" disabled>Select Type</option>
                     <option value="Honeymoon">Honeymoon</option>
                     <option value="Group Trip">Group Trip</option>
                     <option value="Family Trip">Family Trip</option>
                     <option value="Solo Trip">Solo Trip</option>
                   </select>
+                </div>
+                
+                {/* Popular Trip Checkbox */}
+                <div className="mt-4">
+                  <label className="flex items-center space-x-2 cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      checked={isPopular}
+                      onChange={(e) => setIsPopular(e.target.checked)}
+                      className="form-checkbox h-5 w-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                    />
+                    <span className="text-gray-800 font-medium">Mark as Popular Trip (will appear in Popular Trips section)</span>
+                  </label>
                 </div>
               </div>
 
@@ -276,263 +268,151 @@ const CreatePackage: React.FC = () => {
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-semibold text-gray-800">Itinerary</h3>
-                <button
-                  type="button"
-                  onClick={() =>
-                    handleAddField(setItinerary, itinerary, {
-                      day: "",
-                      date: "",
-                      details: "",
-                    })
-                  }
-                  className="flex items-center text-sm bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg transition"
-                >
-                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                  </svg>
-                  Add Day
-                </button>
+                <div className="flex items-center space-x-4">
+                  <div className="flex items-center">
+                    <label className="mr-2 text-sm text-gray-700">Entry Method:</label>
+                    <div className="relative inline-flex">
+                      <select
+                        value={itineraryMode}
+                        onChange={(e) => setItineraryMode(e.target.value as "manual" | "pdf")}
+                        className="pl-3 pr-8 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                      >
+                        <option value="manual">Manual Entry</option>
+                        <option value="pdf">PDF Upload</option>
+                      </select>
+                    </div>
+                  </div>
+                  {itineraryMode === "manual" && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handleAddField(setItinerary, itinerary, {
+                          day: "",
+                          date: "",
+                          details: "",
+                        })
+                      }
+                      className="flex items-center text-sm bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg transition"
+                    >
+                      <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                      </svg>
+                      Add Day
+                    </button>
+                  )}
+                </div>
               </div>
-              <div className="space-y-3">
-                {itinerary.map((item, index) => (
-                  <div key={index} className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
-                    <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Day</label>
-                      <input
-                        type="text"
-                        placeholder="Day 1"
-                        value={item.day}
-                        onChange={(e) =>
-                          handleChange(
-                            setItinerary,
-                            itinerary,
-                            index,
-                            "day",
-                            e.target.value
-                          )
-                        }
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                        required
-                      />
-                    </div>
-                    <div className="md:col-span-3">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
-                      <input
-                        type="date"
-                        value={item.date}
-                        onChange={(e) =>
-                          handleChange(
-                            setItinerary,
-                            itinerary,
-                            index,
-                            "date",
-                            e.target.value
-                          )
-                        }
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                        required
-                      />
-                    </div>
-                    <div className="md:col-span-6">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Details</label>
-                      <div className="flex">
+              
+              {itineraryMode === "manual" ? (
+                <div className="space-y-3">
+                  {itinerary.map((item, index) => (
+                    <div key={index} className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
+                      <div className="md:col-span-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Day</label>
                         <input
                           type="text"
-                          placeholder="Activity details"
-                          value={item.details}
+                          placeholder="Day 1"
+                          value={item.day}
                           onChange={(e) =>
                             handleChange(
                               setItinerary,
                               itinerary,
                               index,
-                              "details",
+                              "day",
                               e.target.value
                             )
                           }
-                          className="flex-grow px-3 py-2 border border-gray-300 rounded-l-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                          required
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                         />
-                        {itinerary.length > 1 && (
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveField(setItinerary, itinerary, index)}
-                            className="px-3 py-2 bg-red-500 text-white rounded-r-lg hover:bg-red-600 transition"
-                          >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                            </svg>
-                          </button>
-                        )}
                       </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Flights Section */}
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-semibold text-gray-800">Flight Details</h3>
-                <button
-                  type="button"
-                  onClick={() =>
-                    handleAddField(setFlights, flights, {
-                      from: "",
-                      to: "",
-                      departureTime: "",
-                      arrivalTime: "",
-                      duration: "",
-                    })
-                  }
-                  className="flex items-center text-sm bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg transition"
-                >
-                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                  </svg>
-                  Add Flight
-                </button>
-              </div>
-              <div className="space-y-3">
-                {flights.map((flight, index) => (
-                  <div key={index} className="bg-gray-50 p-4 rounded-lg">
-                    <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
-                      {Object.entries(flight).map(([key, value]) => (
-                        <div key={key}>
-                          <label className="block text-sm font-medium text-gray-700 mb-1 capitalize">{key.replace(/([A-Z])/g, ' $1')}</label>
+                      <div className="md:col-span-3">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                        <input
+                          type="date"
+                          value={item.date}
+                          onChange={(e) =>
+                            handleChange(
+                              setItinerary,
+                              itinerary,
+                              index,
+                              "date",
+                              e.target.value
+                            )
+                          }
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                        />
+                      </div>
+                      <div className="md:col-span-6">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Details</label>
+                        <div className="flex">
                           <input
-                            type={key.includes('Time') ? 'time' : 'text'}
-                            placeholder={key.replace(/([A-Z])/g, ' $1')}
-                            value={value}
+                            type="text"
+                            placeholder="Activity details"
+                            value={item.details}
                             onChange={(e) =>
                               handleChange(
-                                setFlights,
-                                flights,
+                                setItinerary,
+                                itinerary,
                                 index,
-                                key as keyof FlightDetails,
+                                "details",
                                 e.target.value
                               )
                             }
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                            required
+                            className="flex-grow px-3 py-2 border border-gray-300 rounded-l-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                           />
+                          {itinerary.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveField(setItinerary, itinerary, index)}
+                              className="px-3 py-2 bg-red-500 text-white rounded-r-lg hover:bg-red-600 transition"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                              </svg>
+                            </button>
+                          )}
                         </div>
-                      ))}
+                      </div>
                     </div>
-                    {flights.length > 1 && (
-                      <div className="mt-3 flex justify-end">
-                        <button
+                  ))}
+                </div>
+              ) : (
+                <div className="flex items-center justify-center w-full">
+                  <label className="flex flex-col items-center justify-center w-full h-64 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition">
+                    {itineraryPdf ? (
+                      <div className="p-4 text-center">
+                        <svg className="w-12 h-12 mx-auto mb-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        <p className="text-md font-medium text-gray-800">{itineraryPdf.name}</p>
+                        <p className="mt-1 text-sm text-gray-500">{Math.round(itineraryPdf.size / 1024)} KB</p>
+                        <button 
                           type="button"
-                          onClick={() => handleRemoveField(setFlights, flights, index)}
-                          className="text-sm bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded-lg transition flex items-center"
+                          onClick={() => setItineraryPdf(null)}
+                          className="mt-3 px-4 py-1.5 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition"
                         >
-                          <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                          </svg>
                           Remove
                         </button>
                       </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Accommodations Section */}
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-semibold text-gray-800">Accommodation Details</h3>
-                <button
-                  type="button"
-                  onClick={() =>
-                    handleAddField(setAccommodations, accommodations, {
-                      city: "",
-                      country: "",
-                      hotel: "",
-                      checkIn: "",
-                      checkOut: "",
-                    })
-                  }
-                  className="flex items-center text-sm bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg transition"
-                >
-                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                  </svg>
-                  Add Accommodation
-                </button>
-              </div>
-              <div className="space-y-3">
-                {accommodations.map((accommodation, index) => (
-                  <div key={index} className="bg-gray-50 p-4 rounded-lg">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
-                      {Object.entries(accommodation).map(([key, value]) => (
-                        <div key={key}>
-                          <label className="block text-sm font-medium text-gray-700 mb-1 capitalize">{key.replace(/([A-Z])/g, ' $1')}</label>
-                          <input
-                            type={key.includes('check') ? 'date' : 'text'}
-                            placeholder={key.replace(/([A-Z])/g, ' $1')}
-                            value={value}
-                            onChange={(e) =>
-                              handleChange(
-                                setAccommodations,
-                                accommodations,
-                                index,
-                                key as keyof AccommodationDetails,
-                                e.target.value
-                              )
-                            }
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                            required
-                          />
-                        </div>
-                      ))}
-                    </div>
-                    {accommodations.length > 1 && (
-                      <div className="mt-3 flex justify-end">
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveField(setAccommodations, accommodations, index)}
-                          className="text-sm bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded-lg transition flex items-center"
-                        >
-                          <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                          </svg>
-                          Remove
-                        </button>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                        <svg className="w-12 h-12 mb-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                        </svg>
+                        <p className="mb-2 text-sm text-gray-700"><span className="font-semibold">Click to upload</span> or drag and drop</p>
+                        <p className="text-xs text-gray-500">PDF only (MAX. 10MB)</p>
                       </div>
                     )}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Reporting Details Section */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-800">Reporting Details</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {[
-                  { field: "guestType", placeholder: "Guest Type" },
-                  { field: "reportingPoint", placeholder: "Reporting Point" },
-                  { field: "droppingPoint", placeholder: "Dropping Point" },
-                ].map(({ field, placeholder }) => (
-                  <div key={field}>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">{placeholder}</label>
                     <input
-                      type="text"
-                      placeholder={placeholder}
-                      value={reporting[field as keyof ReportingDetails]}
-                      onChange={(e) =>
-                        handleReportingChange(
-                          field as keyof ReportingDetails,
-                          e.target.value
-                        )
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                      required
+                      type="file"
+                      onChange={(e) => e.target.files && setItineraryPdf(e.target.files[0])}
+                      className="hidden"
+                      required={itineraryMode === "pdf"}
+                      accept="application/pdf"
                     />
-                  </div>
-                ))}
-              </div>
+                  </label>
+                </div>
+              )}
             </div>
 
             {/* Form Actions */}

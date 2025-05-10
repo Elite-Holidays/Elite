@@ -17,7 +17,7 @@ const DashboardUser: React.FC = () => {
   if (isSignedIn === undefined) return <div>Loading...</div>;
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 pt-24">
       <h1 className="text-3xl font-bold text-gray-900">Welcome to Your Dashboard</h1>
       <p className="text-gray-600 mt-2">You are successfully logged in!</p>
     </div>

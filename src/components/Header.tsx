@@ -1,7 +1,7 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useRef, useEffect } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { FaCircleUser } from "react-icons/fa6";
-import { useUser, useClerk } from "@clerk/clerk-react"; // Clerk authentication hooks
+import { useUser, useClerk, SignInButton } from "@clerk/clerk-react"; // Clerk authentication hooks
 
 interface HeaderProps {
   scrollToPopularTrips?: () => void;
@@ -11,9 +11,61 @@ const Header: React.FC<HeaderProps> = ({ scrollToPopularTrips }) => {
   const { isSignedIn, user } = useUser();
   const { signOut } = useClerk();
   const [menuOpen, setMenuOpen] = useState(false); // Check if user is logged in
+  const location = useLocation();
+  const navigate = useNavigate();
+  const menuRef = useRef<HTMLDivElement>(null);
+  
+  // Handle clicks outside of the menu
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    
+    // Add event listener when menu is open
+    if (menuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    
+    // Cleanup event listener
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [menuOpen]);
+  
+  // Function to close menu
+  const closeMenu = () => {
+    setMenuOpen(false);
+  };
+  
+  // Function to handle navigation and close the menu
+  const handleNavigation = (path: string) => {
+    navigate(path);
+    closeMenu();
+  };
+  
+  // Function to handle sign out and close menu
+  const handleSignOut = () => {
+    signOut();
+    closeMenu();
+  };
+  
+  // Function to handle popular trips navigation
+  const handlePopularTripsClick = () => {
+    if (location.pathname === "/") {
+      // If already on home page, just scroll
+      if (scrollToPopularTrips) {
+        scrollToPopularTrips();
+      }
+    } else {
+      // If on another page, navigate to home and then scroll
+      navigate("/", { state: { scrollToPopularTrips: true } });
+    }
+  }
   return (
     <header className="fixed top-0 left-0 right-0 bg-white/50 backdrop-blur-md z-50">
-      <div className="max-w-7xl mx-auto px-4">
+      <div className="max-w-8xl mx-auto px-4">
         <div className="flex items-center justify-between h-20">
           <div className="flex items-center">
             <Link
@@ -22,15 +74,18 @@ const Header: React.FC<HeaderProps> = ({ scrollToPopularTrips }) => {
             >
               Elite Holidays
             </Link>
-            <nav className="hidden md:flex ml-10 space-x-8">
+          </div>
+          
+          <div className="flex items-center space-x-8">
+            <nav className="hidden md:flex space-x-8">
               {[
                 { name: "HOME", path: "/" },
                 {
                   name: "POPULAR TRIPS",
                   path: "#",
-                  onClick: scrollToPopularTrips,
+                  onClick: handlePopularTripsClick,
                 },
-                { name: "EXPERIENCES", path: "/experiences" },
+                { name: "CONTACT", path: "/contact" },
                 { name: "ABOUT", path: "/about" },
               ].map(({ name, path, onClick }) => (
                 <Link
@@ -49,9 +104,9 @@ const Header: React.FC<HeaderProps> = ({ scrollToPopularTrips }) => {
                 </Link>
               ))}
             </nav>
-          </div>
-          {/* Right: Profile Dropdown or Login */}
-          <div className="relative">
+            
+            {/* Right: Profile Dropdown or Login */}
+            <div className="relative" ref={menuRef}>
             {isSignedIn ? (
               <div>
                 {/* Profile Icon */}
@@ -72,20 +127,16 @@ const Header: React.FC<HeaderProps> = ({ scrollToPopularTrips }) => {
                     <p className="px-3 py-2 text-gray-700 font-semibold">
                       {user?.fullName}
                     </p>
-                    <Link
-                      to={
-                        user?.publicMetadata?.role === "admin"
-                          ? "/admin"
-                          : "/dashboard"
-                      }
-                      className="block px-3 py-2 hover:bg-gray-100 rounded-md text-gray-700"
+                    <button
+                      onClick={() => handleNavigation(user?.publicMetadata?.role === "admin" ? "/admin" : "/dashboard")}
+                      className="w-full text-left block px-3 py-2 hover:bg-gray-100 rounded-md text-gray-700"
                     >
                       {user?.publicMetadata?.role === "admin"
                         ? "Admin Panel"
                         : "Dashboard"}
-                    </Link>
+                    </button>
                     <button
-                      onClick={() => signOut()}
+                      onClick={handleSignOut}
                       className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md text-red-500"
                     >
                       Sign Out
@@ -94,13 +145,14 @@ const Header: React.FC<HeaderProps> = ({ scrollToPopularTrips }) => {
                 )}
               </div>
             ) : (
-              <Link to="/login">
+              <SignInButton mode="modal">
                 <button className="rounded-lg px-8 py-2 bg-[#4624c1] text-white hover:bg-[#5a6ad8] transition-all duration-300 flex items-center gap-x-2">
                   <FaCircleUser />
-                  <span>Login</span>
+                  <span>Sign in</span>
                 </button>
-              </Link>
+              </SignInButton>
             )}
+          </div>
           </div>
         </div>
       </div>

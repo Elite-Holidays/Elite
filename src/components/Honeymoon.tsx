@@ -96,7 +96,7 @@ const Honeymoon: React.FC = () => {
           <>
             <div className="flex flex-col items-center mb-10">
               <h2 className="text-4xl font-bold text-gray-900">
-                Explore Group Trips
+                Explore Honeymoon Trips
               </h2>
               <p className="text-gray-600 mt-2">
                 Find the best group trips for your next adventure
@@ -129,7 +129,7 @@ const Honeymoon: React.FC = () => {
                       </p>
                       <div className="flex items-center justify-between mt-4">
                         <span className="text-lg font-bold text-blue-600">
-                          ${pkg.price}
+                          ₹{pkg.price.toLocaleString()}
                         </span>
                         <button
                           className="bg-blue-600 text-white px-4 py-2 rounded-lg shadow-md hover:bg-blue-700 transition-all text-sm"

@@ -1,10 +1,21 @@
 import { cloudinary } from "../utils/cloudinary.js";
 
 // Upload Single File to Cloudinary
-export const uploadFileToCloudinary = async (fileBuffer, mimeType) => {
+export const uploadFileToCloudinary = async (fileBuffer, mimeType, folder = "travel_images") => {
   return new Promise((resolve, reject) => {
+    // Determine resource type based on mimetype
+    let resourceType = "image";
+    if (mimeType.startsWith("video")) {
+      resourceType = "video";
+    } else if (mimeType === "application/pdf") {
+      resourceType = "raw";
+    }
+    
     const stream = cloudinary.uploader.upload_stream(
-      { resource_type: mimeType.startsWith("video") ? "video" : "image" },
+      { 
+        resource_type: resourceType,
+        folder: folder
+      },
       (error, result) => {
         if (error) reject(error);
         else resolve(result.secure_url);

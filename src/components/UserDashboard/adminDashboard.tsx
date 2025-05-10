@@ -17,9 +17,16 @@ const AdminDashboard: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { user } = useUser();
+  const { user, isLoaded, isSignedIn } = useUser();
 
   const isAdmin = user?.publicMetadata?.role === "admin";
+
+  // Security check - redirect if not admin
+  useEffect(() => {
+    if (isLoaded && (!isSignedIn || !isAdmin)) {
+      navigate("/login", { state: { from: "/admin" } });
+    }
+  }, [isLoaded, isSignedIn, isAdmin, navigate]);
 
   useEffect(() => {
     if (!isAdmin) return;
@@ -48,8 +55,13 @@ const AdminDashboard: React.FC = () => {
     fetchUsers();
   }, [isAdmin]);
   
-  if (!isAdmin) {
-    return null;
+  // Early return for non-admin or loading state
+  if (!isLoaded || !isSignedIn || !isAdmin) {
+    return (
+      <div className="min-h-screen pt-24 bg-gray-50 flex justify-center items-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
   }
 
   const downloadPDF = () => {
@@ -88,7 +100,7 @@ const AdminDashboard: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen mt-20 bg-gray-50 p-6">
+    <div className="min-h-screen pt-24 bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header Section */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">

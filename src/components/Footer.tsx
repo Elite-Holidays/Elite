@@ -93,19 +93,17 @@ const Footer: React.FC = () => {
             </ul>
           </div>
 
-          {/* Newsletter Subscription */}
+          {/* Contact Information */}
           <div>
-            <h4 className="text-lg font-semibold mb-4">Newsletter</h4>
-            <p className="text-gray-400 mb-4">Subscribe to get special offers and travel updates.</p>
-            <div className="flex">
-              <input
-                type="email"
-                placeholder="Your email"
-                className="flex-1 px-4 py-2 rounded-l-lg focus:outline-none text-gray-900 placeholder-gray-500"
-              />
-              <button className="rounded-r-lg whitespace-nowrap px-6 py-2 bg-blue-600 hover:bg-blue-700 transition-colors duration-300">
-                Subscribe
-              </button>
+            <h4 className="text-lg font-semibold mb-4">Contact Info</h4>
+            <p className="text-gray-400 mb-4">Get in touch with us for any inquiries or assistance.</p>
+            <div className="space-y-2">
+              <p className="text-gray-400">
+                <span className="font-semibold text-white">Email:</span> info@eliteholidays.com
+              </p>
+              <p className="text-gray-400">
+                <span className="font-semibold text-white">Phone:</span> +91 123 456 7890
+              </p>
             </div>
           </div>
         </div>
@@ -113,8 +111,8 @@ const Footer: React.FC = () => {
         {/* Copyright & Contact Section */}
         <div className="mt-12 pt-8 border-t border-gray-800 text-center text-gray-400">
           <p>&copy; {new Date().getFullYear()} Elite Holidays. All rights reserved.</p>
-          <p className="mt-2">Developed by <span className="font-semibold text-white">GIGANXT Solutions</span></p>
-          <p className="mt-1">Contact us: <a href="mailto:contact@giganxt.me" className="text-blue-400 hover:underline">contact@giganxt.me</a></p>
+          <p className="mt-2">Developed by <span className="font-semibold text-white">Giganxt Solutions</span></p>
+          <p className="mt-1">Contact us: <a href="mailto:contact@giganxt.com" className="text-blue-400 hover:underline">contact@giganxt.me</a></p>
         </div>
       </div>
     </footer>

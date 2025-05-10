@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import Header from "./components/Header";
 import HeroSection from "./components/HeroSection";
 import PopularDestinations from "./components/PopularDestinations";
@@ -32,14 +32,108 @@ import Honeymoon from "./components/Honeymoon.tsx";
 import FamilyTrip from "./components/FamilyTrip.tsx";
 import SoloTrip from "./components/SoloTrip.tsx";
 import PackageDetails from "./components/packageDetails.tsx";
+import ApiDebug from "./components/UserDashboard/ApiDebug.tsx";
+import EditSlide from "./components/UserDashboard/editSlide.tsx";
+import EditPackage from "./components/UserDashboard/editPackage.tsx";
+import AuthGuard from "./components/AuthGuard.tsx";
+import Notification from "./components/Notification";
+import { TravelPackage } from "./types";
 
-const App: React.FC = () => {
+// Wrapper component to access location in the Routes
+const AppContent: React.FC = () => {
   const [isVisible, setIsVisible] = useState(false);
+  const [apiSlides, setApiSlides] = useState([]);
+  const [popularPackages, setPopularPackages] = useState<TravelPackage[]>([]);
+  const [slidesLoading, setSlidesLoading] = useState(true);
+  const [packagesLoading, setPackagesLoading] = useState(true);
   const popularTripsRef = useRef<HTMLDivElement>(null);
+  const location = useLocation();
+  const [notification, setNotification] = useState({
+    visible: false,
+    message: "",
+    type: "info" as "success" | "error" | "info"
+  });
 
   useEffect(() => {
     setIsVisible(true);
   }, []);
+
+  // Show notification if redirected with error message
+  useEffect(() => {
+    if (location.state && (location.state as any).error) {
+      setNotification({
+        visible: true,
+        message: (location.state as any).error,
+        type: "error"
+      });
+      
+      // Clear the error from location state to prevent it from showing again on refresh
+      window.history.replaceState({}, document.title);
+    }
+  }, [location]);
+
+  // Handle notification close
+  const handleCloseNotification = () => {
+    setNotification(prev => ({
+      ...prev,
+      visible: false
+    }));
+  };
+
+  // Fetch slides from API
+  useEffect(() => {
+    const fetchSlides = async () => {
+      try {
+        setSlidesLoading(true);
+        const response = await fetch("http://localhost:8000/api/heroslides");
+        if (!response.ok) throw new Error("Failed to fetch slides");
+        const data = await response.json();
+        setApiSlides(data);
+      } catch (error) {
+        console.error("Error fetching slides:", error);
+        // Fallback to hardcoded slides in case of error
+      } finally {
+        setSlidesLoading(false);
+      }
+    };
+    fetchSlides();
+  }, []);
+
+  // Fetch popular packages from API
+  useEffect(() => {
+    const fetchPackages = async () => {
+      try {
+        setPackagesLoading(true);
+        const response = await fetch("http://localhost:8000/api/travelpackages");
+        if (!response.ok) throw new Error("Failed to fetch packages");
+        const data = await response.json();
+        
+        // Filter packages marked as popular
+        const popular = data.filter((pkg: any) => pkg.isPopular === true);
+        setPopularPackages(popular.length > 0 ? popular : travelPackages); // Fallback to hardcoded packages if none marked as popular
+      } catch (error) {
+        console.error("Error fetching packages:", error);
+        // Fallback to hardcoded packages in case of error
+        setPopularPackages(travelPackages);
+      } finally {
+        setPackagesLoading(false);
+      }
+    };
+    fetchPackages();
+  }, []);
+
+  // Effect to handle scrolling when navigating from other pages
+  useEffect(() => {
+    // Check if we have state with scrollToPopularTrips flag
+    if (location.state && (location.state as any).scrollToPopularTrips) {
+      // Small delay to ensure the component is fully rendered
+      setTimeout(() => {
+        if (popularTripsRef.current) {
+          popularTripsRef.current.scrollIntoView({ behavior: "smooth" });
+        }
+      }, 100);
+    }
+  }, [location]);
 
   const scrollToPopularTrips = () => {
     if (popularTripsRef.current) {
@@ -48,56 +142,118 @@ const App: React.FC = () => {
   };
 
   return (
-    <Router>
+    <div className="min-h-screen bg-white overflow-x-hidden">
       <ScrollToTop />
-      <div className="min-h-screen bg-white overflow-x-hidden">
-        <Header scrollToPopularTrips={scrollToPopularTrips} />
+      <Header scrollToPopularTrips={scrollToPopularTrips} />
+      
+      {notification.visible && (
+        <Notification
+          message={notification.message}
+          type={notification.type}
+          visible={notification.visible}
+          onClose={handleCloseNotification}
+        />
+      )}
 
-        <Routes>
-          <Route
-            path="/"
-            element={
-              <>
-                <HeroSection slides={heroSlides} isVisible={isVisible} />
-                <OvalCards />
-                <WhyChooseUs features={features} />
-                <div ref={popularTripsRef}>
-                  <PopularDestinations packages={travelPackages} />
-                </div>
-                <Statistics stats={statistics} />
-                <Reviews reviews={reviews} />
-                <FAQs />
-              </>
-            }
-          />
-          <Route path="/more-destinations" element={<MoreDestinations />} />
-          <Route path="/group" element={<Groups />} />
-          <Route path="/packages/:id" element={<PackageDetails />} />
-          <Route path ="/honeymoon" element ={<Honeymoon/>}/>
-          <Route path="/familytrip" element={<FamilyTrip/>}/>
-          <Route path="/solotrip" element={<SoloTrip/>}/>
-          <Route path="/about" element={<About />} />
-          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-          <Route path="/faqs" element={<FAQs />} />
-          <Route path="/terms" element={<TAC />} />
-          <Route path="/blog" element={<Blog />} />
-          <Route path="/contact" element={<ContactUs />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/dashboard" element={<DashboardUser />} />
-          <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="/admin/slides" element={<ShowSlides/>}/>
-          <Route path="/admin/packages" element={<ShowPackages/>}/>
-          <Route path="/admin/create-package" element={<CreatePackage />} />
-          <Route path="/admin/create-slides" element={<CreateSlides />} /> 
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <>
+              <HeroSection 
+                // Use API slides if available, otherwise fall back to hardcoded ones
+                slides={apiSlides.length > 0 ? apiSlides : heroSlides} 
+                isVisible={isVisible} 
+              />
+              <OvalCards />
+              <WhyChooseUs features={features} />
+              <div ref={popularTripsRef}>
+                <PopularDestinations packages={popularPackages} />
+              </div>
+              <Statistics stats={statistics} />
+              <Reviews />
+              <FAQs />
+            </>
+          }
+        />
+        <Route path="/more-destinations" element={<MoreDestinations />} />
+        <Route path="/group" element={<Groups />} />
+        <Route path="/packages/:id" element={<PackageDetails />} />
+        <Route path="/package/:slug" element={<PackageDetails />} />
+        <Route path ="/honeymoon" element ={<Honeymoon/>}/>
+        <Route path="/familytrip" element={<FamilyTrip/>}/>
+        <Route path="/solotrip" element={<SoloTrip/>}/>
+        <Route path="/about" element={<About />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/faqs" element={<FAQs />} />
+        <Route path="/terms" element={<TAC />} />
+        <Route path="/blog" element={<Blog />} />
+        <Route path="/contact" element={<ContactUs />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        
+        {/* User routes - requires authentication */}
+        <Route path="/dashboard" element={
+          <AuthGuard>
+            <DashboardUser />
+          </AuthGuard>
+        } />
+        
+        {/* Admin routes - requires authentication and admin role */}
+        <Route path="/admin" element={
+          <AuthGuard adminOnly>
+            <AdminDashboard />
+          </AuthGuard>
+        } />
+        <Route path="/admin/slides" element={
+          <AuthGuard adminOnly>
+            <ShowSlides/>
+          </AuthGuard>
+        } />
+        <Route path="/admin/packages" element={
+          <AuthGuard adminOnly>
+            <ShowPackages/>
+          </AuthGuard>
+        } />
+        <Route path="/admin/create-package" element={
+          <AuthGuard adminOnly>
+            <CreatePackage />
+          </AuthGuard>
+        } />
+        <Route path="/admin/create-slides" element={
+          <AuthGuard adminOnly>
+            <CreateSlides />
+          </AuthGuard>
+        } />
+        <Route path="/admin/api-debug" element={
+          <AuthGuard adminOnly>
+            <ApiDebug />
+          </AuthGuard>
+        } />
+        <Route path="/admin/edit-slide/:slideId" element={
+          <AuthGuard adminOnly>
+            <EditSlide />
+          </AuthGuard>
+        } />
+        <Route path="/admin/edit-package/:packageId" element={
+          <AuthGuard adminOnly>
+            <EditPackage />
+          </AuthGuard>
+        } />
+      </Routes>
 
+      <Footer />
+      <Chatbot />
+      <SocialLinks />
+    </div>
+  );
+};
 
-        </Routes>
-
-        <Footer />
-        <Chatbot />
-        <SocialLinks />
-      </div>
+// Main App component with Router
+const App: React.FC = () => {
+  return (
+    <Router>
+      <AppContent />
     </Router>
   );
 };

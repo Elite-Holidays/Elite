@@ -7,6 +7,8 @@ export interface TravelPackage {
   rating: number;
   image: string;
   description: string;
+  slug?: string;
+  isPopular?: boolean;
 }
 
 export interface Review {

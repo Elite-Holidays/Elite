@@ -7,31 +7,32 @@ const ItinerarySchema = new mongoose.Schema({
 });
 
 const FlightSchema = new mongoose.Schema({
-  from: { type: String, required: true },
-  to: { type: String, required: true },
-  departureTime: { type: String, required: true },
-  arrivalTime: { type: String, required: true },
-  duration: { type: String, required: true },
+  from: { type: String, required: false },
+  to: { type: String, required: false },
+  departureTime: { type: String, required: false },
+  arrivalTime: { type: String, required: false },
+  duration: { type: String, required: false },
 });
 
 const AccommodationSchema = new mongoose.Schema({
-  city: { type: String, required: true },
-  country: { type: String, required: true },
-  hotel: { type: String, required: true },
-  checkIn: { type: String, required: true },
-  checkOut: { type: String, required: true },
+  city: { type: String, required: false },
+  country: { type: String, required: false },
+  hotel: { type: String, required: false },
+  checkIn: { type: String, required: false },
+  checkOut: { type: String, required: false },
   image: {type: String},
 });
 
 const ReportingSchema = new mongoose.Schema({
-  guestType: { type: String, required: true },
-  reportingPoint: { type: String, required: true },
-  droppingPoint: { type: String, required: true },
+  guestType: { type: String, required: false },
+  reportingPoint: { type: String, required: false },
+  droppingPoint: { type: String, required: false },
 });
 
 const TravelPackageSchema = new mongoose.Schema(
   {
     title: { type: String, required: true },
+    slug: { type: String, required: true, unique: true },
     location: { type: String, required: true },
     price: { type: Number, required: true },
     duration: { type: String, required: true },
@@ -40,11 +41,14 @@ const TravelPackageSchema = new mongoose.Schema(
     description: { type: String, required: true },
     tripType: { type: String, required: true },
     travelType: { type: String, required: true },
+    isPopular: { type: Boolean, default: false },
+    itineraryMode: { type: String, enum: ["manual", "pdf"], default: "manual" },
+    itineraryPdf: { type: String }, // URL to the PDF file
 
     itinerary: [ItinerarySchema], // Embedded Itinerary details
-    flights: [FlightSchema], // Embedded Flight details
-    accommodations: [AccommodationSchema], // Embedded Accommodation details
-    reporting: ReportingSchema, // Single Reporting object
+    flights: { type: [FlightSchema], default: [] }, // Optional Flight details
+    accommodations: { type: [AccommodationSchema], default: [] }, // Optional Accommodation details
+    reporting: { type: ReportingSchema, required: false }, // Optional Reporting object
   },
   { timestamps: true }
 );

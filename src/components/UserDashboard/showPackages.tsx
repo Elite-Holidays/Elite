@@ -1,33 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeftIcon, TrashIcon, CalendarIcon, PaperAirplaneIcon, BuildingOfficeIcon, ClipboardDocumentIcon, StarIcon, ClockIcon } from "@heroicons/react/24/outline";
+import { ArrowLeftIcon, TrashIcon, CalendarIcon, StarIcon, ClockIcon } from "@heroicons/react/24/outline";
+import { useUser } from "@clerk/clerk-react";
 
 interface ItineraryDetails {
   day: string;
   date: string;
   details: string;
-}
-
-interface FlightDetails {
-  from: string;
-  to: string;
-  departureTime: string;
-  arrivalTime: string;
-  duration: string;
-}
-
-interface AccommodationDetails {
-  city: string;
-  country: string;
-  hotel: string;
-  checkIn: string;
-  checkOut: string;
-}
-
-interface ReportingDetails {
-  guestType: string;
-  reportingPoint: string;
-  droppingPoint: string;
 }
 
 interface TravelPackage {
@@ -42,9 +21,6 @@ interface TravelPackage {
   tripType: string;
   travelType: string;
   itinerary: ItineraryDetails[];
-  flights: FlightDetails[];
-  accommodations: AccommodationDetails[];
-  reporting: ReportingDetails;
   createdAt: string;
   updatedAt: string;
 }
@@ -53,8 +29,21 @@ const ShowPackages: React.FC = () => {
   const [packages, setPackages] = useState<TravelPackage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
+  const { user, isLoaded, isSignedIn } = useUser();
+  
+  const isAdmin = user?.publicMetadata?.role === "admin";
+
+  // Security check - redirect if not admin
+  useEffect(() => {
+    if (isLoaded && (!isSignedIn || !isAdmin)) {
+      navigate("/login", { state: { from: "/admin/packages" } });
+    }
+  }, [isLoaded, isSignedIn, isAdmin, navigate]);
 
   useEffect(() => {
+    // Only fetch packages if user is admin
+    if (!isLoaded || !isAdmin) return;
+    
     const fetchPackages = async () => {
       try {
         setIsLoading(true);
@@ -69,7 +58,7 @@ const ShowPackages: React.FC = () => {
       }
     };
     fetchPackages();
-  }, []);
+  }, [isLoaded, isAdmin]);
 
   const handleDeletePackage = async (id: string) => {
     if (!window.confirm("Are you sure you want to delete this package?")) return;
@@ -85,16 +74,20 @@ const ShowPackages: React.FC = () => {
     }
   };
 
+  const handleEditPackage = (id: string) => {
+    navigate(`/admin/edit-package/${id}`);
+  };
+
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+      <div className="flex items-center justify-center min-h-screen pt-24 bg-gray-50">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen mt-16 bg-gray-50 p-4 sm:p-6">
+    <div className="min-h-screen pt-24 bg-gray-50 p-4 sm:p-100">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
@@ -202,104 +195,26 @@ const ShowPackages: React.FC = () => {
                         </div>
                       </details>
                     </div>
-
-                    {/* Flights */}
-                    <div className="border border-gray-200 rounded-lg overflow-hidden">
-                      <details className="group">
-                        <summary className="flex items-center justify-between p-3 cursor-pointer list-none">
-                          <div className="flex items-center">
-                            <PaperAirplaneIcon className="h-5 w-5 text-gray-500 mr-2" />
-                            <span className="font-medium text-gray-700">Flights</span>
-                          </div>
-                          <svg className="h-5 w-5 text-gray-500 transition-transform group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                          </svg>
-                        </summary>
-                        <div className="px-4 pb-3">
-                          <ul className="space-y-3 text-sm">
-                            {pkg.flights.map((flight, index) => (
-                              <li key={index} className="text-gray-600">
-                                <div className="font-medium text-gray-800">{flight.from} → {flight.to}</div>
-                                <div className="text-xs text-gray-500 mt-1">
-                                  <span className="inline-block mr-3">Depart: {flight.departureTime}</span>
-                                  <span className="inline-block">Arrive: {flight.arrivalTime}</span>
-                                </div>
-                                <div className="text-xs text-gray-500">Duration: {flight.duration}</div>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      </details>
-                    </div>
-
-                    {/* Accommodations */}
-                    <div className="border border-gray-200 rounded-lg overflow-hidden">
-                      <details className="group">
-                        <summary className="flex items-center justify-between p-3 cursor-pointer list-none">
-                          <div className="flex items-center">
-                            <BuildingOfficeIcon className="h-5 w-5 text-gray-500 mr-2" />
-                            <span className="font-medium text-gray-700">Accommodations</span>
-                          </div>
-                          <svg className="h-5 w-5 text-gray-500 transition-transform group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                          </svg>
-                        </summary>
-                        <div className="px-4 pb-3">
-                          <ul className="space-y-3 text-sm">
-                            {pkg.accommodations.map((acc, index) => (
-                              <li key={index} className="text-gray-600">
-                                <div className="font-medium text-gray-800">{acc.hotel}</div>
-                                <div className="text-xs text-gray-500">{acc.city}, {acc.country}</div>
-                                <div className="text-xs text-gray-500 mt-1">
-                                  <span className="inline-block mr-3">Check-in: {acc.checkIn}</span>
-                                  <span className="inline-block">Check-out: {acc.checkOut}</span>
-                                </div>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      </details>
-                    </div>
-
-                    {/* Reporting Details */}
-                    {pkg.reporting && (
-                      <div className="border border-gray-200 rounded-lg overflow-hidden">
-                        <details className="group">
-                          <summary className="flex items-center justify-between p-3 cursor-pointer list-none">
-                            <div className="flex items-center">
-                              <ClipboardDocumentIcon className="h-5 w-5 text-gray-500 mr-2" />
-                              <span className="font-medium text-gray-700">Reporting</span>
-                            </div>
-                            <svg className="h-5 w-5 text-gray-500 transition-transform group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                            </svg>
-                          </summary>
-                          <div className="px-4 pb-3">
-                            <div className="space-y-2 text-sm">
-                              <div className="text-gray-600">
-                                <span className="font-medium text-gray-800">Guest Type:</span> {pkg.reporting.guestType}
-                              </div>
-                              <div className="text-gray-600">
-                                <span className="font-medium text-gray-800">Reporting Point:</span> {pkg.reporting.reportingPoint}
-                              </div>
-                              <div className="text-gray-600">
-                                <span className="font-medium text-gray-800">Dropping Point:</span> {pkg.reporting.droppingPoint}
-                              </div>
-                            </div>
-                          </div>
-                        </details>
-                      </div>
-                    )}
                   </div>
 
-                  {/* Delete Button */}
-                  <button
-                    onClick={() => handleDeletePackage(pkg._id)}
-                    className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                  >
-                    <TrashIcon className="h-4 w-4" />
-                    Delete Package
-                  </button>
+                  {/* Action Buttons */}
+                  <div className="mt-6 flex justify-between">
+                    <button
+                      onClick={() => handleEditPackage(pkg._id)}
+                      className="flex-1 mr-2 py-2 px-4 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDeletePackage(pkg._id)}
+                      className="flex-1 ml-2 py-2 px-4 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors"
+                    >
+                      <div className="flex items-center justify-center">
+                        <TrashIcon className="h-5 w-5 mr-1" />
+                        Delete
+                      </div>
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
