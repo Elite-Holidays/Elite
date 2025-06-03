@@ -20,7 +20,7 @@ interface Review {
 }
 
 const Reviews: React.FC = () => {
-  const { isSignedIn, user } = useUser();
+  const { isSignedIn } = useUser();
   const { getToken } = useAuth();
   const [reviewList, setReviewList] = useState<Review[]>([]);
   const [showModal, setShowModal] = useState(false);

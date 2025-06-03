@@ -2,7 +2,6 @@ import React, { useEffect, useState, useRef } from 'react';
 import { getApiUrl, getMediaUrl } from '../utils/apiConfig';
 import { Swiper, SwiperSlide, SwiperRef } from 'swiper/react';
 import { Pagination, Autoplay, EffectFade } from 'swiper/modules';
-import { IoLogoYoutube } from "react-icons/io5";
 import 'swiper/css';
 import 'swiper/css/pagination';
 import 'swiper/css/effect-fade';
