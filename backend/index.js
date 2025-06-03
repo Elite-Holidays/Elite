@@ -16,6 +16,8 @@ import groupRoutes from "./routes/groupRoutes.js";
 import aboutUsRoutes from "./routes/aboutUsRoutes.js"; 
 import officeRoutes from "./routes/officeRoutes.js";
 import chatbotRoutes from "./routes/chatbotRoutes.js";
+import contactRoutes from "./routes/contactRoutes.js";
+import bookingRoutes from "./routes/bookingRoutes.js";
 
 const app = express();
 const port = process.env.PORT || 8000;
@@ -66,6 +68,8 @@ connectDB()
         app.use("/api/about-us", aboutUsRoutes);
         app.use("/api/offices", officeRoutes);
         app.use("/api/chatbot", chatbotRoutes);
+        app.use("/api/contacts", contactRoutes);
+        app.use("/api/bookings", bookingRoutes);
 
         // Start Server
         app.listen(port, () => {

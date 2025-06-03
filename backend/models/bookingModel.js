@@ -1,15 +1,31 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const bookingSchema = new mongoose.Schema({
   tour: {
     type: mongoose.Schema.ObjectId,
-    ref: 'Tour',
-    required: [true, 'Booking must belong to a Tour!']
+    ref: 'TravelPackage',
+    required: [true, 'Booking must belong to a Travel Package!']
   },
+  // Customer information
+  fullName: {
+    type: String,
+    required: [true, 'Full name is required']
+  },
+  email: {
+    type: String,
+    required: [true, 'Email is required'],
+    trim: true,
+    lowercase: true
+  },
+  phone: {
+    type: String,
+    required: [true, 'Phone number is required']
+  },
+  // Optional user reference if logged in
   user: {
-    type: mongoose.Schema.ObjectId,
+    type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: [true, 'Booking must belong to a User!']
+    required: false
   },
   bookingDate: {
     type: Date,
@@ -41,4 +57,4 @@ bookingSchema.index({ bookingDate: 1 });
 
 const Booking = mongoose.model('Booking', bookingSchema);
 
-module.exports = Booking;
+export default Booking;

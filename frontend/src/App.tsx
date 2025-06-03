@@ -25,6 +25,8 @@ import DashboardUser from "./components/UserDashboard/dashboardUser.tsx";
 import AdminDashboard from "./components/UserDashboard/adminDashboard.tsx";
 import ShowSlides from "./components/UserDashboard/showSlides.tsx";
 import ShowPackages from "./components/UserDashboard/showPackages.tsx";
+import AdminBookings from "./components/UserDashboard/AdminBookings.tsx";
+import AdminContacts from "./components/UserDashboard/AdminContacts.tsx";
 import { heroSlides, travelPackages, reviews, features, statistics } from "./data";
 import ScrollToTop from "./components/ScrollToTop";
 import CreatePackage from "./components/UserDashboard/createPackage.tsx";
@@ -239,6 +241,16 @@ const AppContent: React.FC = () => {
         <Route path="/admin/edit-package/:packageId" element={
           <AuthGuard adminOnly>
             <EditPackage />
+          </AuthGuard>
+        } />
+        <Route path="/admin/bookings" element={
+          <AuthGuard adminOnly>
+            <AdminBookings />
+          </AuthGuard>
+        } />
+        <Route path="/admin/contacts" element={
+          <AuthGuard adminOnly>
+            <AdminContacts />
           </AuthGuard>
         } />
       </Routes>

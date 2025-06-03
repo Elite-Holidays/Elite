@@ -126,7 +126,7 @@ const AdminDashboard: React.FC = () => {
         </div>
 
         {/* Action Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           <div 
             onClick={() => navigate("/admin/create-slides")} 
             className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow cursor-pointer border border-gray-100"
@@ -183,6 +183,36 @@ const AdminDashboard: React.FC = () => {
               <div>
                 <h3 className="font-medium text-gray-800">View Packages</h3>
                 <p className="text-sm text-gray-500">Manage travel packages</p>
+              </div>
+            </div>
+          </div>
+          
+          <div 
+            onClick={() => navigate("/admin/bookings")} 
+            className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow cursor-pointer border border-gray-100"
+          >
+            <div className="flex items-center">
+              <div className="p-3 bg-indigo-100 rounded-lg mr-4">
+                <span className="text-indigo-600 text-xl">🗓️</span>
+              </div>
+              <div>
+                <h3 className="font-medium text-gray-800">Manage Bookings</h3>
+                <p className="text-sm text-gray-500">View and update tour bookings</p>
+              </div>
+            </div>
+          </div>
+          
+          <div 
+            onClick={() => navigate("/admin/contacts")} 
+            className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow cursor-pointer border border-gray-100"
+          >
+            <div className="flex items-center">
+              <div className="p-3 bg-rose-100 rounded-lg mr-4">
+                <span className="text-rose-600 text-xl">✉️</span>
+              </div>
+              <div>
+                <h3 className="font-medium text-gray-800">Contact Messages</h3>
+                <p className="text-sm text-gray-500">View customer inquiries</p>
               </div>
             </div>
           </div>

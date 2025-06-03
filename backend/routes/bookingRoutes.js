@@ -1,20 +1,17 @@
-const express = require('express');
-const { authMiddleware } = require('../middleware/authMiddleware');
-const bookingController = require('../controllers/bookingController');
+import express from 'express';
+import { createBooking, getAllBookings, getBookingById, updateBookingStatus, getBookingsByEmail } from '../controllers/bookingController.js';
 
 const router = express.Router();
 
-// Protect all routes after this middleware
-router.use(authMiddleware);
+// Public route for creating bookings
+router.post('/', createBooking);
 
-router
-  .route('/')
-  .get(bookingController.getAllBookings)
-  .post(bookingController.createBooking);
+// User route for getting their bookings
+router.get('/user/:email', getBookingsByEmail);
 
-router
-  .route('/:id')
-  .get(bookingController.getBookingById)
-  .patch(bookingController.updateBookingStatus);
+// Admin routes for managing bookings
+router.get('/', getAllBookings);
+router.get('/:id', getBookingById);
+router.patch('/:id', updateBookingStatus);
 
-module.exports = router;
+export default router;
