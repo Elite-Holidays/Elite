@@ -7,6 +7,8 @@ const ReviewSchema = new mongoose.Schema({
   comment: { type: String, required: true },
   image: { type: String, required: true },
   date: { type: String, required: true },
+  userId: { type: String, required: true },
+  userEmail: { type: String },
 });
 
 const Review = mongoose.model("Review", ReviewSchema);

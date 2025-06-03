@@ -13,6 +13,11 @@ export const createReview = async (req, res) => {
       return res.status(400).json({ error: "Image is required" });
     }
 
+    // Ensure user is authenticated
+    if (!req.user) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
     // Upload image to Cloudinary
     const imageUrl = await uploadFileToCloudinary(req.file.buffer, req.file.mimetype);
 
@@ -23,6 +28,8 @@ export const createReview = async (req, res) => {
       comment,
       image: imageUrl,
       date,
+      userId: req.user.id,
+      userEmail: req.user.email_addresses?.[0]?.email_address || '',
     });
 
     await newReview.save();
@@ -42,6 +49,11 @@ export const updateReview = async (req, res) => {
     const review = await Review.findById(req.params.id);
 
     if (!review) return res.status(404).json({ error: "Review not found" });
+    
+    // Check if the user is the owner of the review
+    if (review.userId !== req.user.id) {
+      return res.status(403).json({ error: "Not authorized to update this review" });
+    }
 
     let image = review.image;
     if (req.file) {
