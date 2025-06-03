@@ -3,7 +3,6 @@ import { useParams } from "react-router-dom";
 import {
   FaMapMarkerAlt,
   FaCalendarAlt,
-  FaClock,
   FaStar,
   FaInfoCircle,
   FaChevronRight,
@@ -14,6 +13,7 @@ import {
   FaShip,
   FaUsers
 } from "react-icons/fa";
+import { getApiUrl } from "../utils/apiConfig";
 
 interface PackageDetailsProps {
   _id: string;
@@ -37,7 +37,7 @@ const PackageDetails: React.FC = () => {
   const params = useParams<{ id?: string; slug?: string }>();
   const [packageTravel, setPackageTravel] = useState<PackageDetailsProps | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab] = useState("itinerary");
+
 
   useEffect(() => {
     const fetchPackage = async () => {
@@ -46,9 +46,9 @@ const PackageDetails: React.FC = () => {
         
         // Check if we are using slug or id route
         if (params.slug) {
-          response = await fetch(`http://localhost:8000/api/travelPackages/slug/${params.slug}`);
+          response = await fetch(getApiUrl(`/api/travelPackages/slug/${params.slug}`));
         } else if (params.id) {
-          response = await fetch(`http://localhost:8000/api/travelPackages/${params.id}`);
+          response = await fetch(getApiUrl(`/api/travelPackages/${params.id}`));
         } else {
           throw new Error("No identifier provided");
         }

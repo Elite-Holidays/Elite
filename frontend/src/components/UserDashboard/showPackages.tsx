@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from 'react';
+import { getApiUrl } from '../../utils/apiConfig';
 import { useNavigate } from "react-router-dom";
 import { ArrowLeftIcon, TrashIcon, CalendarIcon, StarIcon, ClockIcon } from "@heroicons/react/24/outline";
 import { useUser } from "@clerk/clerk-react";
@@ -47,7 +48,7 @@ const ShowPackages: React.FC = () => {
     const fetchPackages = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch("http://localhost:8000/api/travelpackages");
+        const response = await fetch(getApiUrl('/api/travelpackages'));
         if (!response.ok) throw new Error("Failed to fetch packages");
         const data: TravelPackage[] = await response.json();
         setPackages(data);
@@ -64,7 +65,7 @@ const ShowPackages: React.FC = () => {
     if (!window.confirm("Are you sure you want to delete this package?")) return;
     
     try {
-      const response = await fetch(`http://localhost:8000/api/travelpackages/${id}`, {
+      const response = await fetch(getApiUrl(`/api/travelpackages/${id}`), {
         method: "DELETE",
       });
       if (!response.ok) throw new Error("Failed to delete package");

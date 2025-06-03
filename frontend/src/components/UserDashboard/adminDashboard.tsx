@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { jsPDF } from "jspdf";
 import * as XLSX from "xlsx";
 import { useUser } from "@clerk/clerk-react";
+import { getApiUrl } from "../../utils/apiConfig";
 
 interface User {
   id: string;
@@ -33,7 +34,7 @@ const AdminDashboard: React.FC = () => {
     
     const fetchUsers = async () => {
       try {
-        const response = await fetch("http://localhost:8000/");
+        const response = await fetch(getApiUrl("/"));
         const data = await response.json();
   
         if (data?.users && Array.isArray(data.users)) {

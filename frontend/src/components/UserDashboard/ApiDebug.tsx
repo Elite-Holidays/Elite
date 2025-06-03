@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { getApiUrl } from '../../utils/apiConfig';
 
 const ApiDebug: React.FC = () => {
   const [slides, setSlides] = useState<any[]>([]);
@@ -9,7 +10,7 @@ const ApiDebug: React.FC = () => {
     const fetchSlides = async () => {
       try {
         setLoading(true);
-        const response = await fetch("http://localhost:8000/api/heroslides");
+        const response = await fetch(getApiUrl("/api/heroslides"));
         if (!response.ok) throw new Error("Failed to fetch slides");
         const data = await response.json();
         setSlides(data);

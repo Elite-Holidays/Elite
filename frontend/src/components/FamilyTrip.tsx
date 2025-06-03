@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import {  useNavigate } from "react-router-dom";
+import { getApiUrl } from "../utils/apiConfig";
 
 // Define the TypeScript interface
 interface TravelPackage {
@@ -17,17 +18,14 @@ interface TravelPackage {
 
 const FamilyTrip: React.FC = () => {
   const navigate = useNavigate();
-  const [allTrips, setAllTrips] = useState<TravelPackage[]>([]);
+  const [, setAllTrips] = useState<TravelPackage[]>([]);
   const [groupTrips, setGroupTrips] = useState<TravelPackage[]>([]);
   const [currentPage, setCurrentPage] = useState(0);
   const [activeTab, setActiveTab] = useState("all");
   const [loading, setLoading] = useState(true);
   const itemsPerPage = 6;
 
-  // State for modal
-  const [selectedPackage, setSelectedPackage] = useState<TravelPackage | null>(
-    null
-  );
+  // Removed unused modal state
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -37,7 +35,7 @@ const FamilyTrip: React.FC = () => {
     const fetchAllTrips = async () => {
       try {
         const response = await fetch(
-          "http://localhost:8000/api/travelPackages"
+          getApiUrl("/api/travelPackages")
         );
         if (!response.ok) throw new Error("Failed to fetch trips");
         const data: TravelPackage[] = await response.json();

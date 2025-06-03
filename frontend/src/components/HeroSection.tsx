@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { getApiUrl, getMediaUrl } from '../utils/apiConfig';
 import { Swiper, SwiperSlide, SwiperRef } from 'swiper/react';
 import { Pagination, Autoplay, EffectFade } from 'swiper/modules';
 import { IoLogoYoutube } from "react-icons/io5";
@@ -28,15 +29,8 @@ const HeroSection: React.FC<HeroSectionProps> = ({ isVisible, slides }) => {
 
   // Function to add base URL to relative paths if needed
   const fixImageUrl = (url: string): string => {
-    if (!url) return 'https://via.placeholder.com/400x300?text=No+Image';
-    
-    // If it's already an absolute URL (with http or https), return as is
-    if (url.startsWith('http://') || url.startsWith('https://')) {
-      return url;
-    }
-    
-    // If it's a relative URL (from your server), add the base URL
-    return `http://localhost:8000${url.startsWith('/') ? '' : '/'}${url}`;
+    // Use the utility function for media URLs
+    return getMediaUrl(url);
   };
 
   // Debug to check slides data
@@ -68,7 +62,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ isVisible, slides }) => {
     } else {
       const fetchSlides = async () => {
         try {
-          const response = await fetch("http://localhost:8000/api/heroslides");
+          const response = await fetch(getApiUrl('/api/heroslides'));
           if (!response.ok) throw new Error("Failed to fetch slides");
           const data: Slide[] = await response.json();
           

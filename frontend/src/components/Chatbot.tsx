@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { IoChatbubblesSharp } from "react-icons/io5";
 import { ChatMessage } from "../types";
+import { getApiUrl } from "../utils/apiConfig";
 
 const Chatbot: React.FC = () => {
   const [isChatOpen, setIsChatOpen] = useState(false);
@@ -36,7 +37,7 @@ const Chatbot: React.FC = () => {
       setChatMessages([...chatMessages, newMessage]);
 
       try {
-        const response = await fetch('http://localhost:8000/api/chatbot/response', {
+        const response = await fetch(getApiUrl('/api/chatbot/response'), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

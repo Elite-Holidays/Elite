@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { getApiUrl } from "../utils/apiConfig";
 // TypeScript Interface
 interface TravelPackage {
   _id: string;
@@ -30,7 +31,7 @@ const Honeymoon: React.FC = () => {
   useEffect(() => {
     const fetchAllTrips = async () => {
       try {
-        const response = await fetch("http://localhost:8000/api/travelPackages");
+        const response = await fetch(getApiUrl("/api/travelPackages"));
         if (!response.ok) throw new Error("Failed to fetch trips");
 
         const data: TravelPackage[] = await response.json();

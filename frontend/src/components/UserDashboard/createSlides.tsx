@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeftIcon, CloudArrowUpIcon, PhotoIcon } from "@heroicons/react/24/outline";
 import { useUser } from "@clerk/clerk-react";
+import { getApiUrl } from "../../utils/apiConfig";
 
 const CreateSlides: React.FC = () => {
   const [title, setTitle] = useState("");
@@ -82,7 +83,7 @@ const CreateSlides: React.FC = () => {
     overlayImages.forEach((file) => formData.append("overlayImages", file));
 
     try {
-      const response = await fetch("http://localhost:8000/api/heroslides", {
+      const response = await fetch(getApiUrl("/api/heroslides"), {
         method: "POST",
         body: formData,
       });

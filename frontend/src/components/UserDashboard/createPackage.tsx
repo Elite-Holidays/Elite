@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "@clerk/clerk-react";
+import { getApiUrl } from "../../utils/apiConfig";
 
 interface ItineraryDetails {
   day: string;
@@ -44,7 +45,7 @@ const CreatePackage: React.FC = () => {
 
   const handleChange = <T,>(
     setter: React.Dispatch<React.SetStateAction<T[]>>,
-    state: T[],
+    _: T[], // Renamed to underscore to indicate it's not used
     index: number,
     field: keyof T,
     value: string
@@ -88,7 +89,7 @@ const CreatePackage: React.FC = () => {
 
     try {
       const response = await fetch(
-        "http://localhost:8000/api/travelpackages/create",
+        getApiUrl("/api/travelpackages/create"),
         {
           method: "POST",
           body: formData,

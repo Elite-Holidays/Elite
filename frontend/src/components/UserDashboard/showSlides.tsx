@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "@clerk/clerk-react";
+import { getApiUrl, getMediaUrl } from '../../utils/apiConfig';
 
 // Define Slide type
 interface Slide {
@@ -29,15 +30,7 @@ const ShowSlides: React.FC = () => {
 
   // Function to add base URL to relative paths if needed
   const fixImageUrl = (url: string): string => {
-    if (!url) return 'https://via.placeholder.com/400x300?text=No+Image';
-    
-    // If it's already an absolute URL (with http or https), return as is
-    if (url.startsWith('http://') || url.startsWith('https://')) {
-      return url;
-    }
-    
-    // If it's a relative URL (from your server), add the base URL
-    return `http://localhost:8000${url.startsWith('/') ? '' : '/'}${url}`;
+    return getMediaUrl(url);
   };
 
   // Function to handle edit slide
@@ -52,7 +45,7 @@ const ShowSlides: React.FC = () => {
     const fetchSlides = async () => {
       try {
         setLoading(true);
-        const response = await fetch("http://localhost:8000/api/heroslides");
+        const response = await fetch(getApiUrl('/api/heroslides'));
         if (!response.ok) throw new Error("Failed to fetch slides");
         const data: Slide[] = await response.json();
         
@@ -109,7 +102,7 @@ const ShowSlides: React.FC = () => {
     if (!window.confirm("Are you sure you want to delete this slide?")) return;
     
     try {
-      const response = await fetch(`http://localhost:8000/api/heroslides/${id}`, {
+      const response = await fetch(getApiUrl(`/api/heroslides/${id}`), {
         method: "DELETE",
       });
       if (!response.ok) throw new Error("Failed to delete slide");
@@ -232,13 +225,13 @@ const ShowSlides: React.FC = () => {
         )}
       </div>
       
-      <style jsx>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         @keyframes gentleFloat {
           0% { transform: scale(1) translateY(0); }
           50% { transform: scale(1.05) translateY(-5px); }
           100% { transform: scale(1) translateY(0); }
         }
-      `}</style>
+      `}} />
     </div>
   );
 };

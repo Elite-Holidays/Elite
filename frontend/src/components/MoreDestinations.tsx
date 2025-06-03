@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { getApiUrl } from "../utils/apiConfig";
 
 // Define the TypeScript interface
 interface TravelPackage {
@@ -37,7 +38,7 @@ const MoreDestinations: React.FC = () => {
     const fetchAllTrips = async () => {
       try {
         const response = await fetch(
-          "http://localhost:8000/api/travelPackages"
+          getApiUrl("/api/travelPackages")
         );
         if (!response.ok) throw new Error("Failed to fetch trips");
         const data: TravelPackage[] = await response.json();

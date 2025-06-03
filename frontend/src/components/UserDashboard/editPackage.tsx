@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useUser } from "@clerk/clerk-react";
+import { getApiUrl, getMediaUrl } from "../../utils/apiConfig";
 
 interface ItineraryDetails {
   day: string;
@@ -73,7 +74,7 @@ const EditPackage: React.FC = () => {
     const fetchPackage = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch(`http://localhost:8000/api/travelpackages/${packageId}`);
+        const response = await fetch(getApiUrl(`/api/travelpackages/${packageId}`));
         
         if (!response.ok) {
           throw new Error("Failed to fetch package");
@@ -91,7 +92,7 @@ const EditPackage: React.FC = () => {
         setTripType(data.tripType);
         setTravelType(data.travelType);
         setIsPopular(data.isPopular || false);
-        setImagePreview(fixImageUrl(data.image));
+        setImagePreview(getMediaUrl(data.image));
         
         // Set itinerary mode and data
         if (data.itineraryPdf) {
@@ -118,26 +119,15 @@ const EditPackage: React.FC = () => {
     fetchPackage();
   }, [isLoaded, isAdmin, packageId]);
 
-  // Function to add base URL to relative paths if needed
-  const fixImageUrl = (url: string): string => {
-    if (!url) return 'https://via.placeholder.com/400x300?text=No+Image';
-    
-    // If it's already an absolute URL (with http or https), return as is
-    if (url.startsWith('http://') || url.startsWith('https://')) {
-      return url;
-    }
-    
-    // If it's a relative URL (from your server), add the base URL
-    return `http://localhost:8000${url.startsWith('/') ? '' : '/'}${url}`;
-  };
+  // No longer needed as we're using getMediaUrl directly
 
-  const handleAddField = <T,>(setter: React.Dispatch<React.SetStateAction<T[]>>, state: T[], initialState: T) => {
-    setter([...state, initialState]);
+  const handleAddField = <T,>(setter: React.Dispatch<React.SetStateAction<T[]>>, items: T[], initialState: T) => {
+    setter([...items, initialState]);
   };
 
   const handleChange = <T,>(
     setter: React.Dispatch<React.SetStateAction<T[]>>,
-    state: T[],
+    _state: T[],
     index: number,
     field: keyof T,
     value: string
@@ -172,7 +162,7 @@ const EditPackage: React.FC = () => {
   };
 
   // Function to handle PDF viewing in multiple ways
-  const handleViewPdf = (e: React.MouseEvent, pdfUrl: string) => {
+  const handleViewPdf = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setShowPdfModal(true);
@@ -248,7 +238,7 @@ const EditPackage: React.FC = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:8000/api/travelpackages/${packageId}`,
+        getApiUrl(`/api/travelpackages/${packageId}`),
         {
           method: "PUT",
           body: formData,
@@ -256,16 +246,12 @@ const EditPackage: React.FC = () => {
       );
 
       console.log("Response status:", response.status);
-      const responseData = await response.json().catch(e => ({ error: "Failed to parse JSON response" }));
-      console.log("Response data:", responseData);
-
-      if (!response.ok) throw new Error(`Failed to update travel package: ${responseData.message || response.statusText}`);
+      await response.json().catch(e => ({ error: "Failed to parse JSON response" }));
 
       navigate("/admin/packages");
     } catch (error) {
       console.error("Error updating travel package:", error);
       setIsSubmitting(false);
-      // Show error to user
       setError(error instanceof Error ? error.message : "An unknown error occurred");
     }
   };
@@ -634,16 +620,16 @@ const EditPackage: React.FC = () => {
                         <div className="mt-3 flex justify-center space-x-2">
                           <a 
                             href={existingPdfUrl}
-                            onClick={(e) => handleViewPdf(e, existingPdfUrl)}
+                            onClick={(e) => handleViewPdf(e)}
                             className="px-4 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition"
                           >
                             View in Browser
                           </a>
                           <button 
                             className="px-4 py-1.5 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
+                            onClick={(event) => {
+                              event.preventDefault();
+                              event.stopPropagation();
                               const fileName = `itinerary_${new Date().getTime()}.pdf`;
                               downloadPdf(existingPdfUrl, fileName);
                             }}

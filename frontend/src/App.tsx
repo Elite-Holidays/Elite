@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import { getApiUrl } from "./utils/apiConfig";
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import Header from "./components/Header";
 import HeroSection from "./components/HeroSection";
@@ -85,7 +86,7 @@ const AppContent: React.FC = () => {
     const fetchSlides = async () => {
       try {
         setSlidesLoading(true);
-        const response = await fetch("http://localhost:8000/api/heroslides");
+        const response = await fetch(getApiUrl('/api/heroslides'));
         if (!response.ok) throw new Error("Failed to fetch slides");
         const data = await response.json();
         setApiSlides(data);
@@ -104,7 +105,7 @@ const AppContent: React.FC = () => {
     const fetchPackages = async () => {
       try {
         setPackagesLoading(true);
-        const response = await fetch("http://localhost:8000/api/travelpackages");
+        const response = await fetch(getApiUrl('/api/travelpackages'));
         if (!response.ok) throw new Error("Failed to fetch packages");
         const data = await response.json();
         

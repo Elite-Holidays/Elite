@@ -4,6 +4,7 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 import { Pagination, Autoplay, Navigation } from 'swiper/modules';
 import { Star } from 'lucide-react';
 import { useUser, useAuth } from '@clerk/clerk-react';
+import { getApiUrl } from '../utils/apiConfig';
 import 'swiper/css';
 import 'swiper/css/pagination';
 import 'swiper/css/navigation';
@@ -35,7 +36,7 @@ const Reviews: React.FC = () => {
 
   // ✅ Fetch all reviews from the backend
   useEffect(() => {
-    axios.get('http://localhost:8000/api/reviews')
+    axios.get(getApiUrl('/api/reviews'))
       .then((response) => setReviewList(response.data))
       .catch((error) => console.error('Error fetching reviews:', error));
   }, []);
@@ -73,7 +74,7 @@ const Reviews: React.FC = () => {
       // Get the user's token
       const token = await getToken();
       
-      const response = await axios.post('http://localhost:8000/api/reviews', formData, {
+      const response = await axios.post(getApiUrl('/api/reviews'), formData, {
         headers: { 
           'Content-Type': 'multipart/form-data',
           'Authorization': `Bearer ${token}`

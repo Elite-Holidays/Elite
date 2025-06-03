@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { getApiUrl } from "../utils/apiConfig";
 
 // Define the TypeScript interface
 interface TravelPackage {
@@ -17,12 +18,12 @@ interface TravelPackage {
 
 const Groups: React.FC = () => {
   const navigate = useNavigate();
-  const [allTrips, setAllTrips] = useState<TravelPackage[]>([]);
+  const [, setAllTrips] = useState<TravelPackage[]>([]);
   const [groupTrips, setGroupTrips] = useState<TravelPackage[]>([]);
   const [currentPage, setCurrentPage] = useState(0);
   const [activeTab, setActiveTab] = useState("all");
   const [loading, setLoading] = useState(true);
-  const [selectedTrip, setSelectedTrip] = useState<TravelPackage | null>(null); // ✅ State for modal
+  // Removed unused selectedTrip state
 
   const itemsPerPage = 6;
 
@@ -34,7 +35,7 @@ const Groups: React.FC = () => {
     const fetchAllTrips = async () => {
       try {
         const response = await fetch(
-          "http://localhost:8000/api/travelPackages"
+          getApiUrl("/api/travelPackages")
         );
         if (!response.ok) throw new Error("Failed to fetch trips");
         const data: TravelPackage[] = await response.json();

@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeftIcon, CloudArrowUpIcon, PhotoIcon } from "@heroicons/react/24/outline";
 import { useUser } from "@clerk/clerk-react";
+import { getApiUrl, getMediaUrl } from "../../utils/apiConfig";
 
 interface Slide {
   _id: string;
@@ -43,7 +44,7 @@ const EditSlide: React.FC = () => {
     const fetchSlide = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch(`http://localhost:8000/api/heroslides/${slideId}`);
+        const response = await fetch(getApiUrl(`/api/heroslides/${slideId}`));
         
         if (!response.ok) {
           throw new Error("Failed to fetch slide");
@@ -54,11 +55,11 @@ const EditSlide: React.FC = () => {
         // Set form fields
         setTitle(data.title);
         setDescription(data.description);
-        setImagePreviewUrl(fixImageUrl(data.image));
+        setImagePreviewUrl(getMediaUrl(data.image));
         
         // Set overlay image previews if they exist
         if (data.overlayImages && data.overlayImages.length > 0) {
-          setOverlayPreviewUrls(data.overlayImages.map(img => fixImageUrl(img)));
+          setOverlayPreviewUrls(data.overlayImages.map(img => getMediaUrl(img)));
         }
         
       } catch (error) {
@@ -72,18 +73,7 @@ const EditSlide: React.FC = () => {
     fetchSlide();
   }, [isLoaded, isAdmin, slideId]);
 
-  // Function to add base URL to relative paths if needed
-  const fixImageUrl = (url: string): string => {
-    if (!url) return 'https://via.placeholder.com/400x300?text=No+Image';
-    
-    // If it's already an absolute URL (with http or https), return as is
-    if (url.startsWith('http://') || url.startsWith('https://')) {
-      return url;
-    }
-    
-    // If it's a relative URL (from your server), add the base URL
-    return `http://localhost:8000${url.startsWith('/') ? '' : '/'}${url}`;
-  };
+  // No longer needed as we're using getMediaUrl directly
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -143,7 +133,7 @@ const EditSlide: React.FC = () => {
     overlayImages.forEach((file) => formData.append("overlayImages", file));
 
     try {
-      const response = await fetch(`http://localhost:8000/api/heroslides/${slideId}`, {
+      const response = await fetch(getApiUrl(`/api/heroslides/${slideId}`), {
         method: "PUT",
         body: formData,
       });
