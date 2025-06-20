@@ -136,6 +136,20 @@ const AppContent: React.FC = () => {
         }
       }, 100);
     }
+
+    // Check for FAQ scroll parameter in URL
+    const params = new URLSearchParams(location.search);
+    if (params.get('scrollToFAQ') === 'true') {
+      // Small delay to ensure the component is fully rendered
+      setTimeout(() => {
+        const faqsSection = document.getElementById("faqs-section");
+        if (faqsSection) {
+          faqsSection.scrollIntoView({ behavior: "smooth" });
+          // Clear the URL parameter without refreshing the page
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+      }, 500);
+    }
   }, [location]);
 
   const scrollToPopularTrips = () => {

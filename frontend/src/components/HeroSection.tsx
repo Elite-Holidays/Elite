@@ -5,7 +5,7 @@ import { Pagination, Autoplay, EffectFade } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/pagination';
 import 'swiper/css/effect-fade';
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 interface Slide {
   _id?: string;
@@ -13,6 +13,7 @@ interface Slide {
   description: string;
   image: string;
   overlayImages?: string[];
+  packageId?: string | number; // Optional package ID to link to
 }
 
 interface HeroSectionProps {
@@ -25,6 +26,17 @@ const HeroSection: React.FC<HeroSectionProps> = ({ isVisible, slides }) => {
   const [activeSlideIndex, setActiveSlideIndex] = useState(0);
   const [activeOverlayIndices, setActiveOverlayIndices] = useState<number[]>([]);
   const swiperRef = useRef<SwiperRef>(null);
+  const navigate = useNavigate();
+
+  // Function to handle the Book Now button click
+  const handleBookNow = (slide: Slide) => {
+    if (slide.packageId) {
+      navigate(`/contact?booking=true&packageId=${slide.packageId}`);
+    } else {
+      // If no specific package is linked, just go to the contact page with booking tab active
+      navigate('/contact?booking=true');
+    }
+  };
 
   // Function to add base URL to relative paths if needed
   const fixImageUrl = (url: string): string => {
@@ -191,9 +203,12 @@ const HeroSection: React.FC<HeroSectionProps> = ({ isVisible, slides }) => {
                         {slide.description}
                       </p>
                       <div className="flex space-x-6">
-                        <Link to="/contact" className="rounded-lg whitespace-nowrap px-8 py-4 bg-white text-gray-900 hover:bg-gray-100 transform hover:scale-105 transition-all duration-300 hover:shadow-[0_0_20px_rgba(255,255,255,0.5)]">
+                        <button 
+                          onClick={() => handleBookNow(slide)}
+                          className="rounded-lg whitespace-nowrap px-8 py-4 bg-white text-gray-900 hover:bg-gray-100 transform hover:scale-105 transition-all duration-300 hover:shadow-[0_0_20px_rgba(255,255,255,0.5)]"
+                        >
                           Book Now
-                        </Link>
+                        </button>
                         
                       </div>
                     </div>

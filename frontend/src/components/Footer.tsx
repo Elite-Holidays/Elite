@@ -2,9 +2,26 @@ import React from "react";
 import { FaFacebook, FaYoutube } from "react-icons/fa";
 import { IoLogoInstagram } from "react-icons/io";
 import { BiLogoWhatsapp } from "react-icons/bi";
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 
 const Footer: React.FC = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Function to handle FAQ link click
+  const handleFAQClick = () => {
+    // If we're already on the home page, scroll to the FAQs section
+    if (location.pathname === '/') {
+      const faqsSection = document.getElementById("faqs-section");
+      if (faqsSection) {
+        faqsSection.scrollIntoView({ behavior: "smooth" });
+      }
+    } else {
+      // If we're on another page, navigate to home page with a hash for FAQs
+      navigate('/?scrollToFAQ=true');
+    }
+  };
+
   return (
     <footer id="footer" className="bg-gray-900 text-white py-16">
       <div className="max-w-7xl mx-auto px-4">
@@ -50,11 +67,6 @@ const Footer: React.FC = () => {
                   Destinations
                 </Link>
               </li>
-              <li>
-                <Link to="/blog" className="text-gray-400 hover:text-white transition-colors duration-300">
-                  Blog
-                </Link>
-              </li>
             </ul>
           </div>
 
@@ -69,12 +81,7 @@ const Footer: React.FC = () => {
               </li>
               <li>
                 <button
-                  onClick={() => {
-                    const faqsSection = document.getElementById("faqs-section");
-                    if (faqsSection) {
-                      faqsSection.scrollIntoView({ behavior: "smooth" });
-                    }
-                  }}
+                  onClick={handleFAQClick}
                   className="text-gray-400 hover:text-white transition-colors duration-300"
                 >
                   FAQs
@@ -99,10 +106,10 @@ const Footer: React.FC = () => {
             <p className="text-gray-400 mb-4">Get in touch with us for any inquiries or assistance.</p>
             <div className="space-y-2">
               <p className="text-gray-400">
-                <span className="font-semibold text-white">Email:</span> info@eliteholidays.com
+                <span className="font-semibold text-white">Email:</span> eliteholidays3@gmail.com
               </p>
               <p className="text-gray-400">
-                <span className="font-semibold text-white">Phone:</span> +91 123 456 7890
+                <span className="font-semibold text-white">Phone:</span> +91 95950 14141
               </p>
             </div>
           </div>

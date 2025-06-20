@@ -20,22 +20,25 @@ export const requireAuth = async (req, res, next) => {
     }
     
     try {
-      // Verify the token with Clerk
-      const response = await fetch('https://api.clerk.dev/v1/me', {
+      // Verify the token with Clerk's session verification endpoint
+      const response = await fetch('https://api.clerk.com/v1/session-tokens/verify', {
+        method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${process.env.CLERK_SECRET_KEY}`,
           'Content-Type': 'application/json'
-        }
+        },
+        body: JSON.stringify({ token })
       });
       
       if (!response.ok) {
+        console.error('Clerk API error:', await response.text());
         return res.status(401).json({ error: 'Invalid authentication token' });
       }
       
       const userData = await response.json();
       
       // Add the user data to the request object
-      req.user = userData;
+      req.user = userData.payload;
       next();
     } catch (error) {
       console.error('Token verification error:', error);

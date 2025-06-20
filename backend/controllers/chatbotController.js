@@ -6,6 +6,29 @@ export const getChatbotResponse = async (req, res) => {
   try {
     const { message } = req.body;
     const lowerMessage = message.toLowerCase();
+    
+    // Check if the message is about packages or destinations
+    const isPackageQuery = lowerMessage.includes('package') || 
+                          lowerMessage.includes('trip') || 
+                          lowerMessage.includes('tour') || 
+                          lowerMessage.includes('destination') || 
+                          lowerMessage.includes('place') ||
+                          lowerMessage.includes('travel') ||
+                          lowerMessage.includes('vacation') ||
+                          lowerMessage.includes('holiday');
+    
+    // Check if the message is about booking or contact
+    const isBookingQuery = lowerMessage.includes('book') || 
+                          lowerMessage.includes('reserve') || 
+                          lowerMessage.includes('reservation');
+                          
+    const isContactQuery = lowerMessage.includes('contact') || 
+                          lowerMessage.includes('email') || 
+                          lowerMessage.includes('phone') || 
+                          lowerMessage.includes('call') ||
+                          lowerMessage.includes('address') ||
+                          lowerMessage.includes('location') ||
+                          lowerMessage.includes('reach');
 
     // Prepare context from database
     let context = '';
@@ -91,19 +114,58 @@ export const getChatbotResponse = async (req, res) => {
       context += '\n';
     }
 
+    // Add specific instruction for package queries
+    let userPrompt = message;
+    if (isPackageQuery) {
+      userPrompt = `${message} (IMPORTANT: Format your response as a numbered list with clear package details. DO NOT respond with a paragraph.)`; 
+    }
+    
+    if (isBookingQuery) {
+      userPrompt = `${message} (IMPORTANT: Include booking information and link to https://eliteholidays.com/contact?booking=true in your response)`;
+    }
+    
+    if (isContactQuery) {
+      userPrompt = `${message} (IMPORTANT: Provide complete contact information including email, phone, and location)`;
+    }
+
     // Get response from Gemini
-    let response = await getGeminiResponse(message, context);
+    let response = await getGeminiResponse(userPrompt, context);
 
     // Fallback response if Gemini fails
     if (!response) {
       if (lowerMessage.includes("owner") || lowerMessage.includes("company")) {
-        if (companyInfo) {
-          response = `Our company is led by ${companyInfo.name}, who serves as ${companyInfo.designation}. We're dedicated to providing exceptional travel experiences.`;
-        } else {
-          response = "Elite Holidays is a premier travel company dedicated to providing exceptional travel experiences. Our team of experienced professionals is committed to making your dream vacation a reality.";
-        }
+        response = "Our company is led by Suraj. We're dedicated to providing exceptional travel experiences at Elite Holidays.";
+      } else if (isBookingQuery) {
+        response = "You can book a tour with us in two ways:\n\n" +
+                  "1. Contact us directly:\n" +
+                  "   Email: eliteholidays3@gmail.com\n" +
+                  "   Phone: +91 95950 14141\n\n" +
+                  "Our team will help you select the perfect package and complete your booking.";
+      } else if (isContactQuery) {
+        response = "Here's how you can reach us:\n\n" +
+                  "Owner: Suraj\n" +
+                  "Email: eliteholidays3@gmail.com\n" +
+                  "Phone: +91 95950 14141\n" +
+                  "Location: CIDCO Colony, Aurangabad-Maharashtra\n\n" +
+                  "Feel free to contact us with any questions or to book a tour!";
+      } else if (isPackageQuery) {
+        // Fallback response for package queries in list format
+        response = "Here are some of our popular packages:\n\n" +
+                  "1. Goa Beach Getaway\n" +
+                  "   Location: Goa, India\n" +
+                  "   Trip Type: Family\n" +
+                  "   Tour Type: Beach\n" +
+                  "   Duration: 5 Days\n" +
+                  "   Price: ₹25,000\n\n" +
+                  "2. Kerala Backwaters\n" +
+                  "   Location: Kerala, India\n" +
+                  "   Trip Type: Family\n" +
+                  "   Tour Type: Nature\n" +
+                  "   Duration: 7 Days\n" +
+                  "   Price: ₹35,000\n\n" +
+                  "To book a tour, visit: https://eliteholidays.com/contact?booking=true";
       } else {
-        response = "I can help you with:\n- Finding trending tour packages\n- Package details and pricing\n- Company information\n\nPlease let me know what interests you, and I'll be happy to assist!";
+        response = "I can help you with:\n- Finding trending tour packages\n- Package details and pricing\n- Booking information\n- Contact details\n\nPlease let me know what interests you, and I'll be happy to assist!";
       }
     }
 

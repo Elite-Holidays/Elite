@@ -50,8 +50,8 @@ const FAQs: React.FC = () => {
                     <span className="absolute left-1/2 transform -translate-x-1/2 -bottom-2 h-1 w-20 bg-blue-600 rounded-full"></span>
                 </h2>
 
-                {/* FAQ List */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* FAQ List - Changed to flex-col to ensure visual order matches array order */}
+                <div className="flex flex-col space-y-4">
                     {faqData.map((faq, index) => (
                         <div
                             key={index}
@@ -60,22 +60,29 @@ const FAQs: React.FC = () => {
                             {/* FAQ Question */}
                             <button
                                 onClick={() => toggleFAQ(index)}
-                                className="w-full flex justify-between items-center px-6 py-5 bg-white text-blue-900 font-semibold text-lg transition-all duration-300 hover:bg-blue-50"
+                                className="w-full flex justify-between items-center px-6 py-5 bg-white text-blue-900 font-semibold text-lg transition-all duration-300 hover:bg-blue-50 rounded-xl"
+                                aria-expanded={openIndex === index}
+                                aria-controls={`faq-answer-${index}`}
                             >
                                 {faq.question}
                                 {openIndex === index ? (
-                                    <FaMinus className="text-blue-600" />
+                                    <FaMinus className="text-blue-600 flex-shrink-0 ml-2" />
                                 ) : (
-                                    <FaPlus className="text-gray-500" />
+                                    <FaPlus className="text-gray-500 flex-shrink-0 ml-2" />
                                 )}
                             </button>
 
-                            {/* FAQ Answer - Expanding Section */}
-                            {openIndex === index && (
+                            {/* FAQ Answer - Expanding Section with smooth animation */}
+                            <div 
+                                id={`faq-answer-${index}`}
+                                className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                                    openIndex === index ? 'max-h-96' : 'max-h-0'
+                                }`}
+                            >
                                 <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
                                     <p className="text-gray-700">{faq.answer}</p>
                                 </div>
-                            )}
+                            </div>
                         </div>
                     ))}
                 </div>

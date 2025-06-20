@@ -6,6 +6,7 @@ import { useLocation } from "react-router-dom";
 
 interface TravelPackage {
     _id: string;
+    id?: number;  // Add optional id property for packages that use numeric IDs
     title: string;
     location: string;
     price: number;
@@ -93,15 +94,44 @@ const ContactUs = () => {
                 const response = await axios.get(getApiUrl('/api/travelPackages'));
                 console.log('Travel packages response:', response.data);
                 
+                let packagesData = [];
+                
                 if (response.data && response.data.data) {
-                    setTravelPackages(response.data.data);
-                    console.log('Loaded packages:', response.data.data.length);
-                } else if (response.data) {
-                    // Some APIs might return data directly without nesting
-                    setTravelPackages(response.data);
-                    console.log('Loaded packages (direct):', response.data.length);
+                    packagesData = response.data.data;
+                    console.log('Loaded packages from data field:', packagesData.length);
+                } else if (Array.isArray(response.data)) {
+                    packagesData = response.data;
+                    console.log('Loaded packages from direct array:', packagesData.length);
                 } else {
-                    console.warn('No travel packages found in response');
+                    console.warn('Unexpected API response format:', response.data);
+                }
+                
+                setTravelPackages(packagesData);
+                
+                // Check if we need to select a package from URL params
+                const params = new URLSearchParams(location.search);
+                const packageId = params.get('packageId');
+                
+                if (packageId && packagesData.length > 0) {
+                    // Convert packageId to string for comparison if needed
+                    const packageIdStr = String(packageId);
+                    
+                    // Find the package by comparing IDs as strings to handle both number and string IDs
+                    const selectedPackage = packagesData.find((pkg: TravelPackage) => 
+                        String(pkg._id) === packageIdStr || String(pkg.id) === packageIdStr
+                    );
+                    
+                    if (selectedPackage) {
+                        console.log('Auto-selecting package from URL params:', selectedPackage.title);
+                        setBookingForm(prev => ({
+                            ...prev,
+                            tourPackage: selectedPackage._id || String(selectedPackage.id),
+                            tourPackageName: selectedPackage.title
+                        }));
+                        setActiveTab('booking');
+                    } else {
+                        console.warn(`Package with ID ${packageId} not found in loaded packages`);
+                    }
                 }
             } catch (error) {
                 console.error('Error fetching travel packages:', error);
@@ -111,34 +141,14 @@ const ContactUs = () => {
         };
         
         fetchTravelPackages();
-    }, []);
+    }, [location.search]);
 
-    // This function can be called from other components via URL parameters
-    // For example: /contact?booking=true&packageId=123
-    useEffect(() => {
-        const params = new URLSearchParams(location.search);
-        const packageId = params.get('packageId');
-        
-        if (packageId) {
-            // Find the package in our loaded packages
-            const selectedPackage = travelPackages.find(pkg => pkg._id === packageId);
-            if (selectedPackage) {
-                // Pre-fill the booking form with the selected package
-                setBookingForm(prev => ({
-                    ...prev,
-                    tourPackage: packageId,
-                    tourPackageName: selectedPackage.title
-                }));
-                // Switch to booking tab
-                setActiveTab('booking');
-            }
-        }
-    }, [location.search, travelPackages]);
-    
     // Handle package selection for booking form
     const handlePackageSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const selectedId = e.target.value;
-        const selectedPackage = travelPackages.find(pkg => pkg._id === selectedId);
+        const selectedPackage = travelPackages.find(pkg => 
+            pkg._id === selectedId || String(pkg.id) === selectedId
+        );
         
         setBookingForm({
             ...bookingForm,
@@ -273,8 +283,8 @@ const ContactUs = () => {
                     {activeTab === 'contact' && (
                         <div id="contactForm" className="mb-16">
                             <h2 className="text-3xl font-bold mb-8 text-blue-700 text-center">Get in Touch</h2>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-                                <div className="bg-white p-8 rounded-xl shadow-lg">
+                            <div className="max-w-2xl mx-auto">
+                                <div className="bg-white p-8 rounded-xl shadow-lg mb-8">
                                     <form className="space-y-6" onSubmit={sendContactForm}>
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
@@ -333,23 +343,9 @@ const ContactUs = () => {
                                         </button>
                                     </form>
                                 </div>
-                                <div className="bg-white p-8 rounded-xl shadow-lg">
-                                    <h2 className="text-2xl font-bold mb-6 text-blue-700">Our Offices</h2>
-                                    <div className="space-y-8">
-                                        {["London", "New York", "Singapore"].map((city, index) => (
-                                            <div key={index} className="bg-blue-50 p-4 rounded-lg shadow-sm">
-                                                <h3 className="text-xl font-semibold mb-2 text-blue-800">{city}</h3>
-                                                <p className="text-gray-600">Address details for {city}</p>
-                                                <p className="text-gray-600 mt-2">Contact number</p>
-                                            </div>
-                                        ))}
-                                    </div>
-                                    <div className="mt-8">
-                                        <h2 className="text-2xl font-bold mb-6 text-blue-700">Business Hours</h2>
-                                        <p className="text-gray-600">Monday - Friday: 9:00 AM - 8:00 PM</p>
-                                        <p className="text-gray-600">Saturday: 10:00 AM - 6:00 PM</p>
-                                        <p className="text-gray-600">Sunday: Closed</p>
-                                    </div>
+                                <div className="text-center p-6 bg-white rounded-xl shadow-lg">
+                                    <h3 className="text-xl font-semibold mb-2 text-blue-800">Our Location</h3>
+                                    <p className="text-gray-600">Plot No 830, N-5, Rahul Palace, Oppo Shiva Pickup, Cannought Garden Road, CIDCO Colony, Chhatrapati Sambhaji Nagar (431003), Maharashtra, India</p>
                                 </div>
                             </div>
                         </div>
@@ -422,6 +418,7 @@ const ContactUs = () => {
                                             onChange={handlePackageSelect}
                                             required
                                             className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                            disabled={isLoadingPackages}
                                         >
                                             <option value="">Select a tour package</option>
                                             {isLoadingPackages ? (
@@ -429,13 +426,22 @@ const ContactUs = () => {
                                             ) : travelPackages.length > 0 ? (
                                                 travelPackages.map((pkg) => (
                                                     <option key={pkg._id} value={pkg._id}>
-                                                        {pkg.title} - {pkg.location} (${pkg.price})
+                                                        {pkg.title} - {pkg.location} (₹{pkg.price})
                                                     </option>
                                                 ))
                                             ) : (
                                                 <option disabled>No packages available</option>
                                             )}
                                         </select>
+                                        {isLoadingPackages && (
+                                            <div className="mt-2 text-sm text-blue-600 flex items-center">
+                                                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                </svg>
+                                                Loading packages...
+                                            </div>
+                                        )}
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-2">Booking Date</label>

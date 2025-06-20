@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   FaMapMarkerAlt,
   FaCalendarAlt,
@@ -35,6 +35,7 @@ interface PackageDetailsProps {
 
 const PackageDetails: React.FC = () => {
   const params = useParams<{ id?: string; slug?: string }>();
+  const navigate = useNavigate();
   const [packageTravel, setPackageTravel] = useState<PackageDetailsProps | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -103,6 +104,13 @@ const PackageDetails: React.FC = () => {
     } catch (error) {
       console.error("Error downloading PDF:", error);
       window.open(pdfUrl, '_blank');
+    }
+  };
+
+  // Handle booking button click
+  const handleBookNow = () => {
+    if (packageTravel && packageTravel._id) {
+      navigate(`/contact?booking=true&packageId=${packageTravel._id}`);
     }
   };
 
@@ -334,7 +342,9 @@ const PackageDetails: React.FC = () => {
                   </div>
                 </div>
 
-                <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors">
+                <button 
+                  onClick={handleBookNow}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors">
                   Book Now
                 </button>
 

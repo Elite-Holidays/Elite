@@ -11,6 +11,11 @@ interface PopularDestinationsProps {
 const PopularDestinations: React.FC<PopularDestinationsProps> = ({ packages }) => {
   const navigate = useNavigate(); // Hook for navigation
 
+  // Function to handle the Book Now button click
+  const handleBookNow = (packageId: number) => {
+    navigate(`/contact?booking=true&packageId=${packageId}`);
+  };
+
   return (
     <section className="py-20">
       <div className="max-w-7xl mx-auto px-4">
@@ -70,12 +75,12 @@ const PopularDestinations: React.FC<PopularDestinationsProps> = ({ packages }) =
                       >
                         View Details
                       </Link>
-                      <Link 
-                        to="/contact" 
+                      <button 
+                        onClick={() => handleBookNow(pkg.id)}
                         className="rounded-lg px-4 py-2 bg-white text-gray-900 hover:bg-gray-50 transition-all duration-300"
                       >
                         Book Now
-                      </Link>
+                      </button>
                     </div>
                   </div>
                 </div>
