@@ -17,7 +17,6 @@ export interface Review {
   location: string;
   rating: number;
   comment: string;
-  image: string;
   date: string;
 }
 

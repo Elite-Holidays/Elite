@@ -9,7 +9,6 @@ import { clerkClient } from "@clerk/express";
 // Import Routes
 import heroSlideRoutes from "./routes/heroSlideRoutes.js";
 import travelPackageRoutes from "./routes/travelPackageRoutes.js";
-import reviewRoutes from "./routes/reviewRoutes.js";
 import featureRoutes from "./routes/featureRoutes.js";
 import statisticRoutes from "./routes/statisticRoutes.js";
 import groupRoutes from "./routes/groupRoutes.js";
@@ -18,6 +17,7 @@ import officeRoutes from "./routes/officeRoutes.js";
 import chatbotRoutes from "./routes/chatbotRoutes.js";
 import contactRoutes from "./routes/contactRoutes.js";
 import bookingRoutes from "./routes/bookingRoutes.js";
+import reviewRoutes from "./routes/reviewRoutes.js";
 
 const app = express();
 const port = process.env.PORT || 8000;
@@ -41,8 +41,6 @@ connectDB()
                     orderBy: "+created_at",
                 });
         
-                //console.log("Fetched Users from Clerk:", getUsers); // Debugging
-        
                 return res.status(200).json({
                     message: "Backend connection done",
                     success: true,
@@ -61,7 +59,6 @@ connectDB()
         // API Routes
         app.use("/api/heroslides", heroSlideRoutes);
         app.use("/api/travelpackages", travelPackageRoutes);
-        app.use("/api/reviews", reviewRoutes);
         app.use("/api/features", featureRoutes);
         app.use("/api/statistics", statisticRoutes);
         app.use("/api/groups", groupRoutes);
@@ -70,6 +67,7 @@ connectDB()
         app.use("/api/chatbot", chatbotRoutes);
         app.use("/api/contacts", contactRoutes);
         app.use("/api/bookings", bookingRoutes);
+        app.use("/api/reviews", reviewRoutes);
 
         // Start Server
         app.listen(port, () => {
