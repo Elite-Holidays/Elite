@@ -8,8 +8,7 @@ import 'swiper/css/navigation';
 import 'swiper/css/effect-coverflow';
 import { Review } from '../types';
 import axios from 'axios';
-
-const API_URL = 'http://localhost:8000/api';
+import { getApiUrl } from '../utils/apiConfig';
 
 const Reviews: React.FC = () => {
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -34,7 +33,7 @@ const Reviews: React.FC = () => {
     const fetchReviews = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`${API_URL}/reviews`);
+        const response = await axios.get(getApiUrl('/api/reviews'));
         if (response.data && response.data.data) {
           // Transform the data to match our Review type
           const formattedReviews = response.data.data.map((review: any) => ({
@@ -80,7 +79,7 @@ const Reviews: React.FC = () => {
     e.preventDefault();
     try {
       setLoading(true);
-      const response = await axios.post(`${API_URL}/reviews`, newReview);
+      const response = await axios.post(getApiUrl('/api/reviews'), newReview);
       
       if (response.data && response.data.data) {
         const addedReview = response.data.data;
