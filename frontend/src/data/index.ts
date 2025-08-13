@@ -103,8 +103,8 @@ export const reviews: Review[] = [
     location: 'London, UK',
     rating: 5,
     comment: 'The Maldives package exceeded all expectations. The overwater villa was a dream come true, and the service was impeccable.',
-    image: 'https://public.readdy.ai/ai/img_res/3111fd259e4640dd9c2197dca17fd2c8.jpg',
-    date: '2025-02-20'
+    image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=200&auto=format&fit=crop',
+    date: '2023-06-15'
   },
   {
     id: 2,
@@ -113,52 +113,7 @@ export const reviews: Review[] = [
     rating: 5,
     comment: 'Our Thai island adventure was perfectly organized. Every detail was considered, and the exclusive experiences were unforgettable.',
     image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&auto=format&fit=crop',
-    date: '2025-02-18'
-  },
-  {
-    id: 2,
-    name: 'Alexander Chen',
-    location: 'Singapore',
-    rating: 5,
-    comment: 'Our Thai island adventure was perfectly organized. Every detail was considered, and the exclusive experiences were unforgettable.',
-    image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&auto=format&fit=crop',
-    date: '2025-02-18'
-  },
-  {
-    id: 2,
-    name: 'Alexander Chen',
-    location: 'Singapore',
-    rating: 5,
-    comment: 'Our Thai island adventure was perfectly organized. Every detail was considered, and the exclusive experiences were unforgettable.',
-    image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&auto=format&fit=crop',
-    date: '2025-02-18'
-  },
-  {
-    id: 2,
-    name: 'Alexander Chen',
-    location: 'Singapore',
-    rating: 5,
-    comment: 'Our Thai island adventure was perfectly organized. Every detail was considered, and the exclusive experiences were unforgettable.',
-    image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&auto=format&fit=crop',
-    date: '2025-02-18'
-  },
-  {
-    id: 2,
-    name: 'Alexander Chen',
-    location: 'Singapore',
-    rating: 5,
-    comment: 'Our Thai island adventure was perfectly organized. Every detail was considered, and the exclusive experiences were unforgettable.',
-    image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&auto=format&fit=crop',
-    date: '2025-02-18'
-  },
-  {
-    id: 2,
-    name: 'Alexander Chen',
-    location: 'Singapore',
-    rating: 5,
-    comment: 'Our Thai island adventure was perfectly organized. Every detail was considered, and the exclusive experiences were unforgettable.',
-    image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&auto=format&fit=crop',
-    date: '2025-02-18'
+    date: '2023-07-22'
   },
   {
     id: 3,
@@ -167,9 +122,53 @@ export const reviews: Review[] = [
     rating: 5,
     comment: 'The cultural immersion in Bali was magical. The private villa, local experiences, and attention to detail were outstanding.',
     image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=200&auto=format&fit=crop',
-    date: '2025-02-15'
-  ,}
-  
+    date: '2023-08-05'
+  },
+  {
+    id: 4,
+    name: 'Michael Rodriguez',
+    location: 'New York, USA',
+    rating: 4,
+    comment: 'Great experience overall! The tour guides were knowledgeable and friendly. Would have liked a bit more free time to explore on our own.',
+    image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=200&auto=format&fit=crop',
+    date: '2023-09-12'
+  },
+  {
+    id: 5,
+    name: 'Emma Wilson',
+    location: 'Sydney, Australia',
+    rating: 5,
+    comment: 'Absolutely phenomenal! From the moment we landed until our departure, everything was handled with utmost professionalism. Will definitely book again!',
+    image: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=200&auto=format&fit=crop',
+    date: '2023-10-30'
+  },
+  {
+    id: 6,
+    name: 'Raj Patel',
+    location: 'Mumbai, India',
+    rating: 4,
+    comment: 'The accommodations were luxurious and the itinerary was well-planned. The only hiccup was a slight delay with one of our transfers.',
+    image: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=200&auto=format&fit=crop',
+    date: '2023-11-15'
+  },
+  {
+    id: 7,
+    name: 'Olivia Martinez',
+    location: 'Barcelona, Spain',
+    rating: 5,
+    comment: 'This was our third trip with Elite Holidays and they continue to impress. The personalized touches make all the difference!',
+    image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop',
+    date: '2024-01-08'
+  },
+  {
+    id: 8,
+    name: 'James Kim',
+    location: 'Seoul, South Korea',
+    rating: 5,
+    comment: 'The exclusive access to local experiences was the highlight of our trip. We felt like VIPs throughout our entire journey.',
+    image: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=200&auto=format&fit=crop',
+    date: '2024-02-20'
+  }
 ];
 
 export const features: Feature[] = [

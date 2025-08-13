@@ -21,14 +21,22 @@ export const requireAuth = async (req, res, next) => {
     
     try {
       // Verify the token with Clerk's session verification endpoint
-      const response = await fetch('https://api.clerk.com/v1/session-tokens/verify', {
+      // Using the correct endpoint as per Clerk documentation
+      console.log('Verifying token with Clerk:', token.substring(0, 10) + '...');
+      console.log('Using Clerk Secret Key:', process.env.CLERK_SECRET_KEY ? 'Key is set' : 'Key is missing');
+      
+      const response = await fetch('https://api.clerk.com/v1/sessions/verify', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${process.env.CLERK_SECRET_KEY}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ token })
+        body: JSON.stringify({ 
+          token 
+        })
       });
+      
+      console.log('Clerk API response status:', response.status);
       
       if (!response.ok) {
         console.error('Clerk API error:', await response.text());
@@ -36,6 +44,7 @@ export const requireAuth = async (req, res, next) => {
       }
       
       const userData = await response.json();
+      console.log('Clerk API response data:', JSON.stringify(userData).substring(0, 100) + '...');
       
       // Add the user data to the request object
       req.user = userData.payload;
