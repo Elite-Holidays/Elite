@@ -155,7 +155,7 @@ const Header: React.FC<HeaderProps> = ({ scrollToPopularTrips }) => {
               </div>
             ) : (
               <SignInButton mode="modal">
-                <button className="rounded-lg px-8 py-2 bg-[#4624c1] text-white hover:bg-[#5a6ad8] transition-all duration-300 flex items-center gap-x-2">
+                <button className="rounded-lg px-4 py-2 bg-[#4624c1] text-white hover:bg-[#5a6ad8] transition-all duration-300 flex items-center gap-x-2 whitespace-nowrap text-sm">
                   <FaCircleUser />
                   <span>Sign in</span>
                 </button>
