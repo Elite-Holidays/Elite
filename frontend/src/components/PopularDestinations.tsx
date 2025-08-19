@@ -20,11 +20,11 @@ const PopularDestinations: React.FC<PopularDestinationsProps> = ({ packages }) =
     <section className="py-20">
       <div className="max-w-7xl mx-auto px-4">
         {/* Section Header */}
-        <div className="flex flex-col md:flex-row justify-between items-center mb-16">
+        <div className="flex flex-row justify-between items-center mb-16 w-full">
           <h2 className="text-4xl font-bold text-gray-900">Popular Trips</h2>
           <button
             onClick={() => navigate('/more-destinations')}
-            className="mt-4 md:mt-0 rounded-lg px-8 py-3 bg-indigo-900 text-white hover:bg-purple-900 transition-all duration-300 flex items-center group"
+            className="rounded-lg px-6 py-2 bg-indigo-900 text-white hover:bg-purple-900 transition-all duration-300 flex items-center group text-sm sm:text-base ml-4"
           >
             <span className="font-medium">More Destinations</span>
             <FaLongArrowAltRight className="ml-2 transform group-hover:translate-x-1 transition-transform" />
