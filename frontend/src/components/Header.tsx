@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { FaCircleUser } from "react-icons/fa6";
+import { FaCircleUser, FaBars, FaTimes } from "react-icons/fa6";
 import { useUser, useClerk, SignInButton } from "@clerk/clerk-react"; // Clerk authentication hooks
 
 interface HeaderProps {
@@ -11,6 +11,7 @@ const Header: React.FC<HeaderProps> = ({ scrollToPopularTrips }) => {
   const { isSignedIn, user } = useUser();
   const { signOut } = useClerk();
   const [menuOpen, setMenuOpen] = useState(false); // Check if user is logged in
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false); // Mobile menu state
   const location = useLocation();
   const navigate = useNavigate();
   const menuRef = useRef<HTMLDivElement>(null);
@@ -39,10 +40,16 @@ const Header: React.FC<HeaderProps> = ({ scrollToPopularTrips }) => {
     setMenuOpen(false);
   };
   
+  // Function to close mobile menu
+  const closeMobileMenu = () => {
+    setMobileMenuOpen(false);
+  };
+  
   // Function to handle navigation and close the menu
   const handleNavigation = (path: string) => {
     navigate(path);
     closeMenu();
+    closeMobileMenu();
   };
   
   // Function to handle sign out and close menu
@@ -62,7 +69,8 @@ const Header: React.FC<HeaderProps> = ({ scrollToPopularTrips }) => {
       // If on another page, navigate to home and then scroll
       navigate("/", { state: { scrollToPopularTrips: true } });
     }
-  }
+    closeMobileMenu();
+  };
   return (
     <header className="fixed top-0 left-0 right-0 bg-white/50 backdrop-blur-md z-50">
       <div className="max-w-8xl mx-auto px-4">
@@ -104,6 +112,14 @@ const Header: React.FC<HeaderProps> = ({ scrollToPopularTrips }) => {
                 </Link>
               ))}
             </nav>
+            
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden p-2 text-gray-800 hover:text-gray-900"
+            >
+              {mobileMenuOpen ? <FaTimes size={20} /> : <FaBars size={20} />}
+            </button>
             
             {/* Right: Profile Dropdown or Login */}
             <div className="relative" ref={menuRef}>
@@ -155,6 +171,40 @@ const Header: React.FC<HeaderProps> = ({ scrollToPopularTrips }) => {
           </div>
           </div>
         </div>
+        
+        {/* Mobile Navigation Menu */}
+        {mobileMenuOpen && (
+          <div className="md:hidden bg-white/95 backdrop-blur-md border-t border-gray-200">
+            <nav className="px-4 py-4 space-y-2">
+              {[
+                { name: "HOME", path: "/" },
+                {
+                  name: "POPULAR TRIPS",
+                  path: "#",
+                  onClick: handlePopularTripsClick,
+                },
+                { name: "CONTACT", path: "/contact" },
+                { name: "ABOUT", path: "/about" },
+              ].map(({ name, path, onClick }) => (
+                <Link
+                  key={name}
+                  to={path}
+                  onClick={(e) => {
+                    if (onClick) {
+                      e.preventDefault();
+                      onClick();
+                    } else {
+                      closeMobileMenu();
+                    }
+                  }}
+                  className="block py-3 px-2 text-gray-800 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
+                >
+                  {name}
+                </Link>
+              ))}
+            </nav>
+          </div>
+        )}
       </div>
     </header>
   );
