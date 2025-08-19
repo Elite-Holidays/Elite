@@ -114,14 +114,6 @@ const Header: React.FC<HeaderProps> = ({ scrollToPopularTrips }) => {
               ))}
             </nav>
             
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 text-gray-800 hover:text-gray-900"
-            >
-              {mobileMenuOpen ? <FaTimes size={20} /> : <FaBars size={20} />}
-            </button>
-            
             {/* Right: Profile Dropdown or Login */}
             <div className="relative" ref={menuRef}>
             {isSignedIn ? (
@@ -169,7 +161,15 @@ const Header: React.FC<HeaderProps> = ({ scrollToPopularTrips }) => {
                 </button>
               </SignInButton>
             )}
-          </div>
+            </div>
+            
+            {/* Mobile Menu Button - Now positioned after login */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden p-2 text-gray-800 hover:text-gray-900"
+            >
+              {mobileMenuOpen ? <FaTimes size={20} /> : <FaBars size={20} />}
+            </button>
           </div>
         </div>
         
