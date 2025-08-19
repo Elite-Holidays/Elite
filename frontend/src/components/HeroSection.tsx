@@ -152,12 +152,12 @@ const HeroSection: React.FC<HeroSectionProps> = ({ isVisible, slides }) => {
   }, []);
 
   return (
-    <div className="pt-20">
+    <div className="pt-16 md:pt-20">
       {localSlides.length === 0 ? (
-        <div className="h-[650px] bg-gray-800 flex items-center justify-center">
-          <div className="text-center text-white">
-            <h2 className="text-3xl font-bold mb-4">No slides available</h2>
-            <p>Please add some slides through the admin panel.</p>
+        <div className="h-[400px] md:h-[650px] bg-gray-800 flex items-center justify-center">
+          <div className="text-center text-white px-4">
+            <h2 className="text-2xl md:text-3xl font-bold mb-4">No slides available</h2>
+            <p className="text-sm md:text-base">Please add some slides through the admin panel.</p>
           </div>
         </div>
       ) : (
@@ -171,7 +171,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ isVisible, slides }) => {
           effect="fade"
           fadeEffect={{ crossFade: true }}
           loop={true}
-          className="h-[650px]"
+          className="h-[500px] sm:h-[600px] md:h-[650px]"
           onSlideChange={handleSlideChange}
           ref={swiperRef}
         >
@@ -189,27 +189,26 @@ const HeroSection: React.FC<HeroSectionProps> = ({ isVisible, slides }) => {
                     (e.target as HTMLImageElement).src = 'https://via.placeholder.com/1200x650?text=Image+Not+Found';
                   }}
                 />
-                <div className="absolute inset-0 bg-gradient-to-r from-black/50 to-transparent">
-                  <div className="max-w-7xl mx-auto px-4 h-full flex justify-between items-center">
+                <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-transparent md:bg-gradient-to-r md:from-black/50 md:to-transparent">
+                  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex flex-col lg:flex-row lg:justify-between items-center">
                     <div
-                      className={`flex flex-col justify-center h-full max-w-2xl transition-all duration-1000 transform ${
+                      className={`flex flex-col justify-center h-full w-full lg:max-w-2xl text-center lg:text-left transition-all duration-1000 transform ${
                         isVisible ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'
                       }`}
                     >
-                      <h1 className="text-8xl font-bold text-white mb-6 leading-tight">
+                      <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-8xl font-bold text-white mb-4 md:mb-6 leading-tight">
                         {slide.title}
                       </h1>
-                      <p className="text-xl text-gray-200 mb-8 leading-relaxed">
+                      <p className="text-sm sm:text-base md:text-lg lg:text-xl text-gray-200 mb-6 md:mb-8 leading-relaxed px-2 lg:px-0">
                         {slide.description}
                       </p>
-                      <div className="flex space-x-6">
+                      <div className="flex flex-col sm:flex-row justify-center lg:justify-start space-y-3 sm:space-y-0 sm:space-x-4 lg:space-x-6">
                         <button 
                           onClick={() => handleBookNow(slide)}
-                          className="rounded-lg whitespace-nowrap px-8 py-4 bg-white text-gray-900 hover:bg-gray-100 transform hover:scale-105 transition-all duration-300 hover:shadow-[0_0_20px_rgba(255,255,255,0.5)]"
+                          className="rounded-lg whitespace-nowrap px-6 sm:px-8 py-3 sm:py-4 bg-white text-gray-900 hover:bg-gray-100 transform hover:scale-105 transition-all duration-300 hover:shadow-[0_0_20px_rgba(255,255,255,0.5)] text-sm sm:text-base font-medium"
                         >
                           Book Now
                         </button>
-                        
                       </div>
                     </div>
                     
