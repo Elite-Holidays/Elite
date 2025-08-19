@@ -68,16 +68,16 @@ const PopularDestinations: React.FC<PopularDestinationsProps> = ({ packages }) =
                   {/* Price & Booking Button */}
                   <div className="flex items-center justify-between">
                     <span className="text-white text-xl font-bold">₹{pkg.price}</span>
-                    <div className="space-x-2">
+                    <div className="flex items-center gap-2 flex-shrink-0">
                       <Link 
                         to={`/package/${pkg.slug}`} 
-                        className="rounded-lg px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 transition-all duration-300"
+                        className="rounded-lg px-3 py-2 bg-blue-600 text-white hover:bg-blue-700 transition-all duration-300 text-sm whitespace-nowrap"
                       >
                         View Details
                       </Link>
                       <button 
                         onClick={() => handleBookNow(pkg.id)}
-                        className="rounded-lg px-4 py-2 bg-white text-gray-900 hover:bg-gray-50 transition-all duration-300"
+                        className="rounded-lg px-3 py-2 bg-white text-gray-900 hover:bg-gray-50 transition-all duration-300 text-sm whitespace-nowrap"
                       >
                         Book Now
                       </button>
