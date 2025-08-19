@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { FaCircleUser, FaBars, FaTimes } from "react-icons/fa6";
+import { FaCircleUser } from "react-icons/fa6";
+import { FaBars, FaTimes } from "react-icons/fa";
 import { useUser, useClerk, SignInButton } from "@clerk/clerk-react"; // Clerk authentication hooks
 
 interface HeaderProps {
