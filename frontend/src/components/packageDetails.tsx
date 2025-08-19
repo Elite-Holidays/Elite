@@ -401,14 +401,7 @@ const PackageDetails: React.FC = () => {
         </div>
       </div>
 
-      {/* Mobile Sticky Bottom Bar */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 z-50">
-        <button 
-          onClick={handleBookNow}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center">
-          <span className="mr-2">Book for ₹{packageTravel.price.toLocaleString()}</span>
-        </button>
-      </div>
+
     </div>
   );
 };
