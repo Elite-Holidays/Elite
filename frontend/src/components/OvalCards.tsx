@@ -5,16 +5,8 @@ import { das } from "../data";
 const OvalCards: React.FC = () => {
     const navigate = useNavigate();
 
-    const handleExploreClick = (title: string) => {
-        if (title === "Group Trip") {
-            navigate("/group");
-        } if (title === "Honey Moon") {
-            navigate("/honeymoon");
-        }if (title === "Family Trip") {
-            navigate("/familytrip");
-        }if (title === "Solo Trip") {
-            navigate("/solotrip");
-        }
+    const handleExploreClick = () => {
+        navigate("/more-destinations");
     };
 
     return (
@@ -69,7 +61,7 @@ const OvalCards: React.FC = () => {
                                             
                                             <div className={`${isEven ? '' : 'self-end'}`}>
                                                 <button
-                                                    onClick={() => handleExploreClick(card.title)}
+                                                    onClick={handleExploreClick}
                                                     className={`relative overflow-hidden group-hover:bg-white px-8 py-3 rounded-full ${isEven ? 'bg-yellow-400 text-blue-900' : 'bg-blue-400 text-indigo-900'} font-semibold transition-all duration-300 group-hover:shadow-xl`}
                                                 >
                                                     Discover {card.title}
